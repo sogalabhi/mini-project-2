@@ -395,17 +395,82 @@ Run the included examples:
 python slope_analyzer.py     # Run built-in examples
 python example_usage.py      # Run comprehensive examples
 ```
-## Backend Setup
 
-Run these in terminal after cloning the repository:
+---
+
+## Project Setup (Backend + Frontend)
+
+This project includes a **FastAPI backend** and a **React frontend** for slope stability analysis.
+
+### Prerequisites
+
+- **Python 3.9+** (for backend)
+- **Node.js 18+** and **npm** (for frontend)
+
+### 1. Backend Setup
+
+From the project root:
 
 ```bash
-1. cd backend
-2. pip install fastapi uvicorn
-3. uvicorn main:app --reload
+# Install Python dependencies
+pip install fastapi uvicorn pydantic matplotlib pyslope
+
+# Run the API server (from project root so slope_analyzer can be imported)
+uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-And then open http://127.0.0.1:8000
+The backend will be available at **http://127.0.0.1:8000**.
+
+**Endpoints:**
+- `GET /` — Health check
+- `GET /health` — Status
+- `POST /analyze` — Run analysis, returns JSON (FOS, status, method, warnings)
+- `POST /analyze-image` — Same input, returns PNG diagram
+
+### 2. Frontend Setup
+
+In a **separate terminal**, from the project root:
+
+```bash
+cd slope-ui
+npm install
+npm run dev
+```
+
+The frontend will be available at **http://localhost:5173** (or the port Vite assigns).
+
+The Vite dev server proxies `/analyze` and `/analyze-image` to the backend automatically.
+
+### 3. Full Stack (Quick Start)
+
+```bash
+# Terminal 1 — Backend
+pip install fastapi uvicorn pydantic matplotlib pyslope
+uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
+
+# Terminal 2 — Frontend
+cd slope-ui && npm install && npm run dev
+```
+
+Then open **http://localhost:5173** in your browser.
+
+### API Payload Format
+
+The frontend sends this structure to both `/analyze` and `/analyze-image`:
+
+```json
+{
+  "geometry": { "height": 10, "angle": 30, "length": 17.32 },
+  "layers": [{ "name": "Clay", "unit_weight": 18, "friction_angle": 30, "cohesion": 10, "depth_to_bottom": null }],
+  "udls": [{ "magnitude": 10, "offset": 1, "length": 3 }],
+  "line_loads": [{ "magnitude": 20, "offset": 2 }],
+  "water_table_depth": null,
+  "water_unit_weight": 9.81,
+  "settings": { "num_slices": 50, "num_iterations": 2000, "tolerance": 0.001 }
+}
+```
+
+---
 
 ## License
 

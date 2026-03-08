@@ -1,16 +1,100 @@
-# React + Vite
+# Slope Stability Analyzer — Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React + Vite frontend for the Slope Stability Analyzer. Connects to the FastAPI backend for analysis and diagram generation.
 
-Currently, two official plugins are available:
+## Tech Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+| Role        | Library              |
+|------------|----------------------|
+| Build      | Vite 5               |
+| UI         | React 18             |
+| Canvas     | react-konva + konva  |
+| State      | Zustand              |
+| Server     | TanStack Query v5    |
+| HTTP       | axios                |
+| Styling    | CSS (ui.html theme)  |
 
-## React Compiler
+## Setup
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+npm install
+npm run dev
+```
 
-## Expanding the ESLint configuration
+The app runs at **http://localhost:5173** (or the port Vite shows).
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+**Backend required:** The FastAPI backend must be running at **http://localhost:8000**. The Vite dev server proxies `/analyze` and `/analyze-image` to it.
+
+## Project Structure
+
+```
+src/
+├── api/
+│   └── slopeApi.js       # axios calls to /analyze and /analyze-image
+├── store/                # Zustand state slices
+│   ├── geometryStore.js
+│   ├── materialsStore.js
+│   ├── loadsStore.js
+│   ├── waterStore.js
+│   ├── settingsStore.js
+│   └── resultsStore.js
+├── hooks/
+│   ├── useAnalysis.js    # TanStack mutation for analysis
+│   └── useCanvasCoords.js # metres ↔ pixels transform
+└── components/
+    ├── canvas/           # Konva layers (grid, slope, loads, water, labels)
+    ├── panels/           # Geometry, Materials, Loads, Water, Settings
+    ├── results/          # FOS display, DiagramViewer
+    └── layout/           # AppShell, TabPanel, ViewerTabs
+```
+
+## Features
+
+- **Visualizer tab** — Interactive Konva canvas: slope geometry, soil layers, loads, water table
+- **Image tab** — Backend-generated PNG diagram (enabled after running analysis)
+- **Right sidebar** — Tabbed forms for geometry, materials, loads, water, settings
+- **Results strip** — Factor of Safety, status badge, method info
+
+## API Contract
+
+### POST /analyze
+
+**Request body:** See main project README for full payload format.
+
+**Response:**
+```json
+{
+  "factor_of_safety": 1.423,
+  "status": "stable",
+  "stability_status": "stable",
+  "method": "Bishop Simplified",
+  "warnings": []
+}
+```
+
+### POST /analyze-image
+
+Same request body. Returns a PNG image (slope diagram with failure circle).
+
+## Customizing the API URL
+
+Edit `vite.config.js`:
+
+```js
+server: {
+  proxy: {
+    '/analyze': { target: 'http://localhost:8000' },
+    '/analyze-image': { target: 'http://localhost:8000' }
+  }
+}
+```
+
+For production, set `VITE_API_BASE` and update `src/api/slopeApi.js` to use it.
+
+## Scripts
+
+| Command       | Description              |
+|---------------|--------------------------|
+| `npm run dev` | Start dev server         |
+| `npm run build` | Production build       |
+| `npm run preview` | Preview production build |
