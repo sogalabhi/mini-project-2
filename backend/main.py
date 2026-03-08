@@ -26,33 +26,3 @@ def analyze_slope(data: SlopeInput):
     }
 
 
-@app.get("/health")
-def health_check():
-    return {"status": "Backend running"}
-
-
-@app.get("/methods")
-def get_methods():
-    return {
-        "methods": [
-            "Bishop Method"
-        ]
-    }
-
-
-@app.post("/safety-check")
-def safety_check(data: SlopeInput):
-
-    fos = (data.cohesion + data.unit_weight) / (data.slope_height + 1)
-
-    if fos < 1:
-        condition = "Failure"
-    elif fos < 1.5:
-        condition = "Marginally Safe"
-    else:
-        condition = "Safe"
-
-    return {
-        "factor_of_safety": fos,
-        "condition": condition
-    }
