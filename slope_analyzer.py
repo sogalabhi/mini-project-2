@@ -725,7 +725,37 @@ class SlopeStabilityAnalyzer:
         
         plt.tight_layout()
         plt.show()
-    
+
+    def generate_plot_bytes(self, results: AnalysisResults) -> bytes:
+        """
+        Generate matplotlib diagram as PNG bytes (for web/API use).
+        Does not display; returns bytes suitable for StreamingResponse.
+
+        Args:
+            results: Analysis results to visualize
+
+        Returns:
+            PNG image bytes
+        """
+        import io
+        try:
+            import matplotlib
+            matplotlib.use('Agg')  # non-interactive backend for headless use
+            import matplotlib.pyplot as plt
+        except ImportError:
+            raise RuntimeError("Matplotlib required for diagram generation. pip install matplotlib")
+
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
+        self._plot_slope_geometry(ax1)
+        self._plot_critical_surface(ax2, results)
+        plt.tight_layout()
+
+        buf = io.BytesIO()
+        fig.savefig(buf, format='png', bbox_inches='tight', dpi=100)
+        plt.close(fig)
+        buf.seek(0)
+        return buf.getvalue()
+
     def _plot_slope_geometry(self, ax) -> None:
         """Plot the slope geometry with materials and loads."""
         # Draw slope
