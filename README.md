@@ -395,6 +395,17 @@ Run the included examples:
 python slope_analyzer.py     # Run built-in examples
 python example_usage.py      # Run comprehensive examples
 ```
+## Backend Setup
+
+Run these in terminal after cloning the repository:
+
+```bash
+1. cd backend
+2. pip install fastapi uvicorn
+3. uvicorn main:app --reload
+```
+
+And then open http://127.0.0.1:8000
 
 ## License
 
