@@ -54,6 +54,7 @@ export default function SlopeCanvas() {
             coords={coords}
             layers={layers}
             height={H}
+            length={L}
           />
         </Layer>
         <Layer>
@@ -61,6 +62,7 @@ export default function SlopeCanvas() {
             coords={coords}
             water={water}
             height={H}
+            length={L}
           />
         </Layer>
         <Layer>
@@ -76,6 +78,7 @@ export default function SlopeCanvas() {
             udls={udls}
             lineLoads={lineLoads}
             height={H}
+            length={L}
           />
         </Layer>
         <Layer>

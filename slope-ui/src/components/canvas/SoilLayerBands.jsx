@@ -1,13 +1,31 @@
 import React from 'react'
-import { Rect, Text } from 'react-konva'
+import { Group, Rect, Text } from 'react-konva'
+import {
+  getSlopePolygonWorld,
+  worldPointsToKonva,
+} from './canvasGeometry.js'
 
-export default function SoilLayerBands({ coords, layers, height }) {
+export default function SoilLayerBands({ coords, layers, height, length }) {
   const { worldW, toPixel } = coords
 
   if (!layers || layers.length === 0) return null
 
+  const clipPoints = worldPointsToKonva(
+    getSlopePolygonWorld(height, length),
+    toPixel,
+  )
+
   return (
-    <>
+    <Group
+      clipFunc={(ctx) => {
+        ctx.beginPath()
+        ctx.moveTo(clipPoints[0], clipPoints[1])
+        for (let i = 2; i < clipPoints.length; i += 2) {
+          ctx.lineTo(clipPoints[i], clipPoints[i + 1])
+        }
+        ctx.closePath()
+      }}
+    >
       {layers.map((layer, index) => {
         const topDepth = index === 0 ? 0 : layers[index - 1].depthToBottom || 0
         const bottomDepth = layer.depthToBottom || height
@@ -39,7 +57,7 @@ export default function SoilLayerBands({ coords, layers, height }) {
           </React.Fragment>
         )
       })}
-    </>
+    </Group>
   )
 }
 

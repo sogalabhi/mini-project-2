@@ -144,6 +144,10 @@ def analyze_slope(data: AnalysisPayload):
     try:
         analyzer = build_analyzer(data)
         results = analyzer.run_analysis(gui_mode=False, show_warnings=False)
+        comparison = analyzer.run_comparison(
+            iterations=data.settings.num_iterations,
+            seed=42,
+        )
     except ValueError as e:
         raise HTTPException(400, str(e))
 
@@ -151,8 +155,9 @@ def analyze_slope(data: AnalysisPayload):
         "factor_of_safety": results.factor_of_safety,
         "status": results.status.value,
         "stability_status": results.status.value,
-        "method": "Bishop Simplified",
+        "method": "Bishop",
         "warnings": [],
+        "comparison": comparison.to_dict(),
     }
 
 

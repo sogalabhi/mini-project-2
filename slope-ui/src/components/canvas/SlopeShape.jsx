@@ -1,5 +1,9 @@
 import { Line, Circle } from 'react-konva'
 import { useGeometryStore } from '../../store/geometryStore.js'
+import {
+  getSlopePolygonWorld,
+  worldPointsToKonva,
+} from './canvasGeometry.js'
 
 export default function SlopeShape({ coords, height, length }) {
   const { toPixel } = coords
@@ -10,6 +14,10 @@ export default function SlopeShape({ coords, height, length }) {
 
   const toe = toPixel(toeWorld)
   const crest = toPixel(crestWorld)
+  const polygonPoints = worldPointsToKonva(
+    getSlopePolygonWorld(height, length),
+    toPixel,
+  )
 
   const handleDragMove = () => (e) => {
     const pos = e.target.position()
@@ -22,28 +30,34 @@ export default function SlopeShape({ coords, height, length }) {
   return (
     <>
       <Line
+        points={polygonPoints}
+        closed
+        fill="rgba(240, 240, 240, 0.45)"
+        stroke="#000000"
+        strokeWidth={2}
+      />
+      <Line
         points={[toe.x, toe.y, crest.x, crest.y]}
-        stroke="#e5e7eb"
-        strokeWidth={3}
+        stroke="#000000"
+        strokeWidth={2}
       />
       <Line
         points={[toe.x, toe.y, crest.x, toe.y]}
-        stroke="#4b5563"
+        stroke="#000000"
         strokeWidth={2}
       />
       <Line
         points={[crest.x, crest.y, crest.x, toe.y]}
-        stroke="#4b5563"
+        stroke="#000000"
         strokeWidth={2}
       />
-      {/* Crest drag handle */}
       <Circle
         x={crest.x}
         y={crest.y}
         radius={7}
-        fill="#22c55e"
-        stroke="#052e16"
-        strokeWidth={1}
+        fill="#ffffff"
+        stroke="#000000"
+        strokeWidth={1.5}
         draggable
         onDragMove={handleDragMove()}
       />

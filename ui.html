@@ -1,0 +1,647 @@
+<html lang="en" vid="0"><head vid="1">
+    <meta charset="UTF-8" vid="2">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" vid="3">
+    <title vid="4">Slope Stability Analyzer</title>
+    <style vid="5">
+        :root {
+            --bg-color: #ffffff;
+            --panel-bg: #f4f4f4;
+            --border-heavy: 2px solid #000000;
+            --border-light: 1px solid #000000;
+            --border-dashed: 1px dashed #000000;
+            --accent-blue: #32449c; 
+            --text-main: #000000;
+            --text-muted: #555555;
+            
+            
+            --status-red: #cc0000;
+            --status-orange: #e67300;
+            --status-green: #008800;
+            
+            --font-sans: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            --font-mono: 'Consolas', 'Courier New', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            font-size: 12px;
+        }
+
+        
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 16px;
+            border-bottom: var(--border-heavy);
+            background-color: var(--bg-color);
+        }
+
+        .main-workspace {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            flex-grow: 1;
+            min-height: 0;
+        }
+
+        .left-column {
+            display: flex;
+            flex-direction: column;
+            border-right: var(--border-heavy);
+            background-color: var(--bg-color);
+        }
+
+        .canvas-container {
+            flex-grow: 1;
+            position: relative;
+            overflow: hidden;
+            background-image: 
+                linear-gradient(to right, #e8e8e8 1px, transparent 1px),
+                linear-gradient(to bottom, #e8e8e8 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .results-panel {
+            height: 140px;
+            border-top: var(--border-heavy);
+            background-color: var(--panel-bg);
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            padding: 12px;
+            gap: 20px;
+        }
+
+        .right-column {
+            display: flex;
+            flex-direction: column;
+            background-color: var(--panel-bg);
+        }
+
+        
+        .branding {
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .branding::before {
+            content: '';
+            display: block;
+            width: 12px;
+            height: 12px;
+            background-color: var(--accent-blue);
+            border: var(--border-light);
+        }
+
+        .run-btn {
+            background-color: var(--accent-blue);
+            color: #ffffff;
+            border: var(--border-heavy);
+            padding: 6px 16px;
+            font-family: var(--font-sans);
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 12px;
+            cursor: pointer;
+            letter-spacing: 0.5px;
+        }
+
+        .run-btn:hover {
+            background-color: #1e2a6a;
+        }
+
+        .run-btn:active {
+            transform: translateY(1px);
+        }
+
+        
+        svg.slope-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        
+        .svg-outline { stroke: #000; stroke-width: 2; fill: #f0f0f0; }
+        .svg-layer { stroke: #000; stroke-width: 1; stroke-dasharray: 4 4; fill: none; }
+        .svg-water { stroke: var(--accent-blue); stroke-width: 2; stroke-dasharray: 8 4; fill: none; }
+        .svg-water-fill { fill: rgba(50, 68, 156, 0.1); }
+        .svg-dimension-line { stroke: #000; stroke-width: 1; fill: none; }
+        .svg-dimension-tick { stroke: #000; stroke-width: 1; }
+        .svg-dimension-text { fill: #000; font-family: var(--font-sans); font-size: 10px; text-anchor: middle; }
+        .svg-load-arrow { stroke: #000; stroke-width: 1.5; fill: none; }
+        .svg-load-head { fill: #000; }
+        .svg-handle { fill: #fff; stroke: #000; stroke-width: 1.5; cursor: crosshair; }
+        .svg-handle:hover { fill: var(--accent-blue); }
+        
+        .canvas-toolbar {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            display: flex;
+            gap: 4px;
+            background: #fff;
+            border: var(--border-heavy);
+            padding: 4px;
+        }
+
+        .tool-btn {
+            width: 24px;
+            height: 24px;
+            border: var(--border-light);
+            background: #fff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .tool-btn.active {
+            background: var(--text-main);
+            color: #fff;
+        }
+
+        
+        .fos-display {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            border-right: var(--border-dashed);
+            padding-right: 20px;
+        }
+
+        .fos-label {
+            text-transform: uppercase;
+            font-size: 10px;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .fos-value {
+            font-family: var(--font-mono);
+            font-size: 42px;
+            font-weight: bold;
+            line-height: 1;
+            letter-spacing: -1px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            border: var(--border-heavy);
+            padding: 4px 8px;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 11px;
+            margin-top: 8px;
+            background-color: var(--bg-color);
+            color: var(--status-green);
+            border-color: var(--status-green);
+        }
+
+        .results-details {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            line-height: 1.6;
+        }
+
+        .results-mini-map {
+            width: 160px;
+            background: #fff;
+            border: var(--border-light);
+            position: relative;
+        }
+
+        
+        .tabs-header {
+            display: flex;
+            border-bottom: var(--border-heavy);
+            background-color: #e0e0e0;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 8px 4px;
+            text-align: center;
+            border-right: var(--border-light);
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 10px;
+            letter-spacing: 0.5px;
+            user-select: none;
+        }
+
+        .tab:last-child { border-right: none; }
+        
+        .tab.active {
+            background-color: var(--panel-bg);
+            border-bottom: 2px solid var(--panel-bg);
+            margin-bottom: -2px;
+        }
+
+        .tab-content {
+            padding: 12px;
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        
+        .prop-group {
+            margin-bottom: 16px;
+        }
+
+        .prop-group-title {
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 10px;
+            border-bottom: var(--border-light);
+            padding-bottom: 4px;
+            margin-bottom: 8px;
+        }
+
+        .input-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .input-label {
+            flex: 0 0 100px;
+            font-size: 11px;
+        }
+
+        .input-wrapper {
+            display: flex;
+            flex: 1;
+            border: var(--border-light);
+            background: #fff;
+        }
+
+        .input-wrapper input {
+            width: 100%;
+            border: none;
+            padding: 4px 6px;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            outline: none;
+        }
+
+        .input-unit {
+            padding: 4px 6px;
+            background: #e8e8e8;
+            border-left: var(--border-light);
+            font-size: 10px;
+            color: var(--text-muted);
+            min-width: 35px;
+            text-align: center;
+        }
+
+        .input-wrapper input:disabled {
+            background-color: #f0f0f0;
+            color: var(--text-muted);
+        }
+
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 10px;
+            background: #fff;
+        }
+
+        .data-table th, .data-table td {
+            border: var(--border-light);
+            padding: 4px;
+            text-align: left;
+        }
+
+        .data-table th {
+            background-color: #e8e8e8;
+            font-size: 9px;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        .data-table td input {
+            width: 100%;
+            border: none;
+            background: transparent;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            outline: none;
+        }
+
+        .data-table td input:focus {
+            background: #eef;
+        }
+
+        .table-action-row {
+            display: flex;
+            gap: 5px;
+        }
+
+        .action-btn {
+            background: transparent;
+            border: var(--border-dashed);
+            padding: 4px 8px;
+            font-size: 10px;
+            text-transform: uppercase;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .action-btn:hover {
+            background: #e8e8e8;
+            border-style: solid;
+        }
+
+        
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        input[type=range] {
+            flex: 1;
+            -webkit-appearance: none;
+            background: transparent;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 12px;
+            width: 8px;
+            background: var(--text-main);
+            border: var(--border-light);
+            cursor: pointer;
+            margin-top: -5px;
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 2px;
+            cursor: pointer;
+            background: var(--text-main);
+        }
+
+        .toggle-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            border: var(--border-light);
+            background: #fff;
+        }
+
+        
+        .cad-checkbox {
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            border: var(--border-heavy);
+            border-radius: 0;
+            outline: none;
+            cursor: pointer;
+            position: relative;
+        }
+        .cad-checkbox:checked::before {
+            content: '';
+            position: absolute;
+            top: 2px; left: 2px; right: 2px; bottom: 2px;
+            background-color: var(--accent-blue);
+        }
+
+    </style>
+</head>
+<body vid="6">
+
+    <header class="app-header" vid="7">
+        <div class="branding" vid="8">GEO-SLOPE ANALYZER v3.0.1</div>
+        <button class="run-btn" vid="9">Run Analysis</button>
+    </header>
+
+    <main class="main-workspace" vid="10">
+        
+        
+        <section class="left-column" vid="11">
+            <div class="canvas-container" vid="12">
+                <div class="canvas-toolbar" vid="13">
+                    <button class="tool-btn active" title="Select/Move" vid="14">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" vid="15"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z" vid="16"></path></svg>
+                    </button>
+                    <button class="tool-btn" title="Add Point" vid="17">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" vid="18"><line x1="12" y1="5" x2="12" y2="19" vid="19"></line><line x1="5" y1="12" x2="19" y2="12" vid="20"></line></svg>
+                    </button>
+                    <button class="tool-btn" title="Draw Slip Surface" vid="21">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" vid="22"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" vid="23"></path></svg>
+                    </button>
+                </div>
+
+                <svg class="slope-canvas" viewBox="0 0 800 500" preserveAspectRatio="xMidYMid meet" vid="24">
+                    
+                    <line x1="100" y1="450" x2="700" y2="450" class="svg-dimension-line" stroke-dasharray="2 4" vid="25"></line>
+                    
+                    
+                    <polygon points="100,400 400,400 600,200 700,200 700,450 100,450" class="svg-outline" vid="26"></polygon>
+                    
+                    
+                    <path d="M100,420 L420,420 L700,280" class="svg-layer" vid="27"></path>
+                    <path d="M100,435 L700,435" class="svg-layer" vid="28"></path>
+
+                    
+                    <path d="M100,380 L350,380 L550,220 L700,220" class="svg-water" vid="29"></path>
+                    <polygon points="100,380 350,380 550,220 700,220 700,450 100,450" class="svg-water-fill" vid="30"></polygon>
+                    
+                    <line x1="300" y1="380" x2="300" y2="365" stroke="var(--accent-blue)" stroke-width="1.5" vid="31"></line>
+                    <polygon points="295,365 305,365 300,375" fill="none" stroke="var(--accent-blue)" stroke-width="1.5" vid="32"></polygon>
+                    <line x1="292" y1="368" x2="308" y2="368" stroke="var(--accent-blue)" stroke-width="1" vid="33"></line>
+
+                    
+                    <rect x="620" y="180" width="60" height="20" fill="none" stroke="#000" stroke-width="1.5" vid="34"></rect>
+                    <line x1="630" y1="180" x2="630" y2="200" class="svg-load-arrow" vid="35"></line>
+                    <polygon points="628,195 632,195 630,200" class="svg-load-head" vid="36"></polygon>
+                    <line x1="650" y1="180" x2="650" y2="200" class="svg-load-arrow" vid="37"></line>
+                    <polygon points="648,195 652,195 650,200" class="svg-load-head" vid="38"></polygon>
+                    <line x1="670" y1="180" x2="670" y2="200" class="svg-load-arrow" vid="39"></line>
+                    <polygon points="668,195 672,195 670,200" class="svg-load-head" vid="40"></polygon>
+                    <text x="650" y="170" class="svg-dimension-text" vid="41">20 kPa</text>
+
+                    
+                    <path d="M250,400 Q 450,550 650,200" fill="none" stroke="#cc0000" stroke-width="2" stroke-dasharray="5 5" vid="42"></path>
+                    
+                    
+                    <circle cx="450" cy="50" r="3" fill="#cc0000" vid="43"></circle>
+                    <line x1="440" y1="50" x2="460" y2="50" stroke="#cc0000" stroke-width="1" vid="44"></line>
+                    <line x1="450" y1="40" x2="450" y2="60" stroke="#cc0000" stroke-width="1" vid="45"></line>
+                    
+                    <line x1="450" y1="50" x2="450" y2="475" stroke="#cc0000" stroke-width="0.5" stroke-dasharray="2 4" vid="46"></line>
+
+                    
+                    
+                    <line x1="720" y1="200" x2="720" y2="450" class="svg-dimension-line" vid="47"></line>
+                    <line x1="715" y1="200" x2="725" y2="200" class="svg-dimension-tick" vid="48"></line>
+                    <line x1="715" y1="450" x2="725" y2="450" class="svg-dimension-tick" vid="49"></line>
+                    <text x="730" y="330" class="svg-dimension-text" transform="rotate(-90 730 330)" vid="50">H = 15.0m</text>
+                    
+                    
+                    <line x1="100" y1="470" x2="700" y2="470" class="svg-dimension-line" vid="51"></line>
+                    <line x1="100" y1="465" x2="100" y2="475" class="svg-dimension-tick" vid="52"></line>
+                    <line x1="700" y1="465" x2="700" y2="475" class="svg-dimension-tick" vid="53"></line>
+                    <text x="400" y="485" class="svg-dimension-text" vid="54">L = 60.0m</text>
+
+                    
+                    <rect x="96" y="396" width="8" height="8" class="svg-handle" vid="55"></rect>
+                    <rect x="396" y="396" width="8" height="8" class="svg-handle" vid="56"></rect>
+                    <rect x="596" y="196" width="8" height="8" class="svg-handle" vid="57"></rect>
+                    <rect x="696" y="196" width="8" height="8" class="svg-handle" vid="58"></rect>
+                    <rect x="696" y="446" width="8" height="8" class="svg-handle" vid="59"></rect>
+                    <rect x="96" y="446" width="8" height="8" class="svg-handle" vid="60"></rect>
+                </svg>
+            </div>
+
+            
+            <div class="results-panel" vid="61">
+                <div class="fos-display" vid="62">
+                    <div class="fos-label" vid="63">Min. Factor of Safety</div>
+                    <div class="fos-value" vid="64">1.425</div>
+                    <div class="status-badge" vid="65">Design Stable</div>
+                </div>
+                
+                <div class="results-details" vid="66">
+                    <div vid="67">METHOD: MORGENSTERN-PRICE</div>
+                    <div vid="68">SLICES: 30</div>
+                    <div vid="69">ITERATIONS: 12</div>
+                    <div vid="70">TOLERANCE: 0.001</div>
+                    <div vid="71">SLIP CENTER (X,Y): 45.2, 85.0</div>
+                    <div vid="72">RADIUS: 42.5m</div>
+                </div>
+
+                <div class="results-mini-map" vid="73">
+                    
+                    <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none" vid="74">
+                        <polygon points="10,80 40,80 80,20 90,20 90,90 10,90" fill="#e0e0e0" stroke="#000" stroke-width="1" vid="75"></polygon>
+                        <path d="M30,80 Q 50,110 85,20" fill="none" stroke="#cc0000" stroke-width="1" vid="76"></path>
+                    </svg>
+                </div>
+            </div>
+        </section>
+
+        
+        <aside class="right-column" vid="77">
+            <div class="tabs-header" vid="78">
+                <div class="tab" vid="79">Geom</div>
+                <div class="tab active" vid="80">Materials</div>
+                <div class="tab" vid="81">Water</div>
+                <div class="tab" vid="82">Loads</div>
+                <div class="tab" vid="83">Set</div>
+            </div>
+
+            <div class="tab-content" vid="84">
+                
+                
+                <div class="prop-group" vid="85">
+                    <div class="prop-group-title" vid="86">Soil Stratigraphy</div>
+                    
+                    <table class="data-table" vid="87">
+                        <thead vid="88">
+                            <tr vid="89">
+                                <th vid="90">ID</th>
+                                <th vid="91">Name</th>
+                                <th title="Unit Weight" vid="92">γ (kN/m³)</th>
+                                <th title="Cohesion" vid="93">c' (kPa)</th>
+                                <th title="Friction Angle" vid="94">φ' (°)</th>
+                            </tr>
+                        </thead>
+                        <tbody vid="95">
+                            <tr vid="96">
+                                <td vid="97">1</td>
+                                <td vid="98"><input type="text" value="Upper Till" vid="99"></td>
+                                <td vid="100"><input type="text" value="18.5" vid="101"></td>
+                                <td vid="102"><input type="text" value="5.0" vid="103"></td>
+                                <td vid="104"><input type="text" value="28.0" vid="105"></td>
+                            </tr>
+                            <tr vid="106">
+                                <td vid="107">2</td>
+                                <td vid="108"><input type="text" value="Marine Clay" vid="109"></td>
+                                <td vid="110"><input type="text" value="16.0" vid="111"></td>
+                                <td vid="112"><input type="text" value="15.0" vid="113"></td>
+                                <td vid="114"><input type="text" value="0.0" vid="115"></td>
+                            </tr>
+                            <tr vid="116">
+                                <td vid="117">3</td>
+                                <td vid="118"><input type="text" value="Bedrock" vid="119"></td>
+                                <td vid="120"><input type="text" value="22.0" vid="121"></td>
+                                <td vid="122"><input type="text" value="500" vid="123"></td>
+                                <td vid="124"><input type="text" value="45.0" vid="125"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <div class="table-action-row" vid="126">
+                        <button class="action-btn" vid="127">+ Add Layer</button>
+                        <button class="action-btn" vid="128">- Remove</button>
+                    </div>
+                </div>
+
+                <div class="prop-group" vid="129">
+                    <div class="prop-group-title" vid="130">Layer Geometry (Depth)</div>
+                    <div class="input-row" vid="131">
+                        <div class="input-label" vid="132">Layer 1 Base</div>
+                        <div class="input-wrapper" vid="133">
+                            <input type="text" value="-2.0" vid="134">
+                            <div class="input-unit" vid="135">m</div>
+                        </div>
+                    </div>
+                    <div class="input-row" vid="136">
+                        <div class="input-label" vid="137">Layer 2 Base</div>
+                        <div class="input-wrapper" vid="138">
+                            <input type="text" value="-8.5" vid="139">
+                            <div class="input-unit" vid="140">m</div>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div class="prop-group" style="margin-top: 24px; opacity: 0.5;" vid="141">
+                    <div class="prop-group-title" vid="142">Water Table Settings</div>
+                    <div class="toggle-row" vid="143">
+                        <span vid="144">Enable Piezometric Line</span>
+                        <input type="checkbox" class="cad-checkbox" checked="" vid="145">
+                    </div>
+                    <div class="input-row" style="margin-top: 8px;" vid="146">
+                         <div class="input-label" vid="147">Elevation</div>
+                        <div class="slider-container" style="flex:1;" vid="148">
+                            <input type="range" min="-10" max="20" value="5" vid="149">
+                            <span style="font-family: monospace;" vid="150">+5.0m</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </aside>
+
+    </main>
+
+
+</body></html>

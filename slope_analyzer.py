@@ -32,6 +32,7 @@ from typing import Optional, List, Dict, Any, Tuple, Union
 from enum import Enum
 import math
 import warnings
+import random
 
 
 # ============================================================================
@@ -252,6 +253,38 @@ Critical Failure Surface:
 {'=' * 50}
 """
         return summary.strip()
+
+
+@dataclass
+class MethodResult:
+    method_name: str
+    fos: float
+    critical_circle_center: Optional[Tuple[float, float]] = None
+    critical_circle_radius: Optional[float] = None
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "method_name": self.method_name,
+            "fos": self.fos,
+            "critical_circle_center": self.critical_circle_center,
+            "critical_circle_radius": self.critical_circle_radius,
+        }
+
+
+@dataclass
+class ComparisonResults:
+    bishop: MethodResult
+    fellenius: MethodResult
+    circle_count: int
+    seed: int
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "bishop": self.bishop.to_dict(),
+            "fellenius": self.fellenius.to_dict(),
+            "circle_count": self.circle_count,
+            "seed": self.seed,
+        }
 
 
 # ============================================================================
@@ -621,44 +654,13 @@ class SlopeStabilityAnalyzer:
         
         # Import PySlope (lazy import to avoid dependency errors until needed)
         try:
-            import pyslope
-            # TODO: Implement actual PySlope integration here
-            # For now, use simplified calculation
-            use_simplified = True
-        except ImportError:
-            if show_warnings:
-                warnings.warn(
-                    "PySlope library not found. Using simplified FOS calculation. "
-                    "Install PySlope for accurate analysis: pip install pyslope",
-                    UserWarning
-                )
-            use_simplified = True
-        
-        # Calculate FOS
-        # In production with PySlope installed, you would:
-        # 1. Create PySlope slope object with geometry
-        # 2. Add materials, loads, water table
-        # 3. Run analysis
-        # 4. Extract results
-        
-        # For now, use simplified calculation
-        fos = self._calculate_simplified_fos()
-        
-        # Create results object
-        results = AnalysisResults(
-            factor_of_safety=fos,
-            status=StabilityStatus.STABLE,  # Will be set in __post_init__
-            critical_circle_center=(self._length / 2, self._height * 1.5),
-            critical_circle_radius=self._height * 2,
-            slope_geometry={
-                'height': self._height,
-                'angle': self._angle,
-                'length': self._length
-            },
-            material_count=len(self._materials),
-            load_count=len(self._loads),
-            has_water_table=self._water_table is not None
-        )
+            import pyslope  # noqa: F401
+        except ImportError as exc:
+            raise ImportError(
+                "PySlope library not found. Install PySlope for analysis: pip install pyslope"
+            ) from exc
+
+        results = self._run_pyslope_analysis()
         
         # Handle GUI mode
         if gui_mode:
@@ -668,6 +670,297 @@ class SlopeStabilityAnalyzer:
         self._last_results = results
         
         return results
+
+    def _run_pyslope_analysis(self) -> AnalysisResults:
+        """Build and execute a PySlope model from current wrapper state."""
+        slope = self._build_pyslope_model()
+        slope.analyse_slope()
+        fos = float(slope.get_min_FOS())
+        circle = slope.get_min_FOS_circle()
+        circle_center = None
+        circle_radius = None
+        if circle and len(circle) >= 3:
+            circle_center = (float(circle[0]), float(circle[1]))
+            circle_radius = float(circle[2])
+
+        return AnalysisResults(
+            factor_of_safety=fos,
+            status=StabilityStatus.STABLE,
+            critical_circle_center=circle_center,
+            critical_circle_radius=circle_radius,
+            slope_geometry={
+                'height': self._height,
+                'angle': self._angle,
+                'length': self._length
+            },
+            material_count=len(self._materials),
+            load_count=len(self._loads),
+            has_water_table=self._water_table is not None,
+            raw_results=slope,
+        )
+
+    def _build_pyslope_model(self):
+        import pyslope
+        slope = pyslope.Slope(
+            height=self._height,
+            angle=self._angle,
+            length=self._length,
+        )
+        slope.update_analysis_options(
+            slices=self._settings.num_slices,
+            iterations=self._settings.num_iterations,
+            tolerance=self._settings.tolerance,
+        )
+        finite_depths = [m.depth for m in self._materials if m.depth is not None]
+        default_bottom = max(finite_depths) + self._height if finite_depths else self._height * 3
+        pyslope_materials = []
+        for material in self._materials:
+            depth_to_bottom = (
+                material.depth
+                if material.depth is not None
+                else default_bottom
+            )
+            pyslope_materials.append(
+                pyslope.Material(
+                    unit_weight=material.unit_weight,
+                    friction_angle=material.friction_angle,
+                    cohesion=material.cohesion,
+                    depth_to_bottom=depth_to_bottom,
+                    name=material.name,
+                )
+            )
+        if pyslope_materials:
+            slope.set_materials(*pyslope_materials)
+
+        # Load mapping
+        pyslope_udls = []
+        pyslope_line_loads = []
+        for load in self._loads:
+            if isinstance(load, UniformLoad):
+                pyslope_udls.append(
+                    pyslope.Udl(
+                        magnitude=load.magnitude,
+                        offset=load.offset,
+                        length=load.length,
+                    )
+                )
+            elif isinstance(load, LineLoad):
+                pyslope_line_loads.append(
+                    pyslope.LineLoad(
+                        magnitude=load.magnitude,
+                        offset=load.offset,
+                    )
+                )
+        if pyslope_udls:
+            slope.set_udls(*pyslope_udls)
+        if pyslope_line_loads:
+            slope.set_lls(*pyslope_line_loads)
+
+        # Water table mapping
+        if self._water_table is not None:
+            slope.set_water_table(depth=self._water_table.depth)
+        return slope
+
+    def _generate_candidate_circles(self, iterations: int, seed: int) -> List[Tuple[float, float, float]]:
+        rng = random.Random(seed)
+        circles: List[Tuple[float, float, float]] = []
+        m = self._height / self._length
+
+        for _ in range(max(1, iterations)):
+            x1 = rng.uniform(0.03 * self._length, 0.45 * self._length)
+            min_x2 = max(x1 + 0.08 * self._length, x1 + 0.5)
+            if min_x2 >= self._length:
+                continue
+            x2 = rng.uniform(min_x2, 0.98 * self._length)
+
+            y1 = m * x1
+            y2 = m * x2
+
+            mx = 0.5 * (x1 + x2)
+            my = 0.5 * (y1 + y2)
+            dx = x2 - x1
+            dy = y2 - y1
+            chord = math.hypot(dx, dy)
+            if chord <= 0:
+                continue
+
+            nx = -dy / chord
+            ny = dx / chord
+            offset = rng.uniform(chord * 0.6, chord * 4.0)
+            cx = mx + nx * offset
+            cy = my + ny * offset
+            r = math.hypot(cx - x1, cy - y1)
+
+            if cy <= max(y1, y2):
+                continue
+            circles.append((cx, cy, r))
+
+        return circles
+
+    def _run_bishop_on_circles(self, circles: List[Tuple[float, float, float]]) -> MethodResult:
+        slope = self._build_pyslope_model()
+        slope.remove_analysis_limits()
+        slope.remove_individual_planes()
+        for cx, cy, r in circles:
+            slope.add_single_circular_plane(cx, cy, r)
+        slope.analyse_slope()
+        fos = float(slope.get_min_FOS())
+        circle = slope.get_min_FOS_circle()
+        center = None
+        radius = None
+        if circle and len(circle) >= 3:
+            center = (float(circle[0]), float(circle[1]))
+            radius = float(circle[2])
+        return MethodResult(
+            method_name="Bishop",
+            fos=fos,
+            critical_circle_center=center,
+            critical_circle_radius=radius,
+        )
+
+    def _equivalent_soil_properties(self, depth_below_surface: float) -> Tuple[float, float, float]:
+        if depth_below_surface <= 0:
+            top = self._materials[0]
+            return top.unit_weight, top.cohesion, top.friction_angle
+
+        materials = self._materials.copy()
+        weighted_gamma = 0.0
+        weighted_c = 0.0
+        weighted_phi = 0.0
+        consumed = 0.0
+
+        for idx, mat in enumerate(materials):
+            layer_bottom = mat.depth if mat.depth is not None else float("inf")
+            layer_top = 0.0 if idx == 0 else (materials[idx - 1].depth or 0.0)
+            top = max(consumed, layer_top)
+            bottom = min(depth_below_surface, layer_bottom)
+            thickness = max(0.0, bottom - top)
+            if thickness <= 0:
+                continue
+            weighted_gamma += mat.unit_weight * thickness
+            weighted_c += mat.cohesion * thickness
+            weighted_phi += mat.friction_angle * thickness
+            consumed += thickness
+            if consumed >= depth_below_surface:
+                break
+
+        if consumed <= 0:
+            top = materials[0]
+            return top.unit_weight, top.cohesion, top.friction_angle
+
+        return weighted_gamma / consumed, weighted_c / consumed, weighted_phi / consumed
+
+    def _circle_surface_intersections(self, cx: float, cy: float, r: float) -> Optional[Tuple[float, float]]:
+        m = self._height / self._length
+        a = 1 + m * m
+        b = -2 * cx - 2 * m * cy
+        c = cx * cx + cy * cy - r * r
+        disc = b * b - 4 * a * c
+        if disc <= 0:
+            return None
+        root = math.sqrt(disc)
+        x_a = (-b - root) / (2 * a)
+        x_b = (-b + root) / (2 * a)
+        x1, x2 = sorted((x_a, x_b))
+        x1 = max(0.0, min(self._length, x1))
+        x2 = max(0.0, min(self._length, x2))
+        if x2 - x1 <= 1e-6:
+            return None
+        return x1, x2
+
+    def _fellenius_fos_for_circle(self, circle: Tuple[float, float, float]) -> Optional[float]:
+        cx, cy, r = circle
+        intersections = self._circle_surface_intersections(cx, cy, r)
+        if intersections is None:
+            return None
+        x1, x2 = intersections
+        n = max(10, self._settings.num_slices)
+        dx = (x2 - x1) / n
+        if dx <= 0:
+            return None
+
+        m = self._height / self._length
+        sum_resisting = 0.0
+        sum_driving = 0.0
+
+        for i in range(n):
+            x_mid = x1 + (i + 0.5) * dx
+            y_surface = m * x_mid
+            term = r * r - (x_mid - cx) ** 2
+            if term <= 0:
+                continue
+            y_base = cy - math.sqrt(term)
+            if y_base >= y_surface:
+                continue
+
+            slice_height = y_surface - y_base
+            slope_tan = -(x_mid - cx) / math.sqrt(term)
+            alpha = abs(math.atan(slope_tan))
+            cos_alpha = max(math.cos(alpha), 1e-6)
+            l_base = dx / cos_alpha
+
+            gamma, cohesion, phi = self._equivalent_soil_properties(slice_height)
+            area = slice_height * dx
+            W = gamma * area
+
+            for load in self._loads:
+                if isinstance(load, UniformLoad):
+                    if load.offset <= x_mid <= (load.offset + load.length):
+                        W += load.magnitude * dx
+                elif isinstance(load, LineLoad):
+                    if abs(x_mid - load.offset) <= (0.5 * dx):
+                        W += load.magnitude
+
+            u = 0.0
+            if self._water_table is not None:
+                if slice_height > self._water_table.depth:
+                    head = slice_height - self._water_table.depth
+                    u = self._water_table.unit_weight * head
+
+            N_eff = W * math.cos(alpha) - u * l_base
+            resisting = cohesion * l_base + max(0.0, N_eff) * math.tan(math.radians(phi))
+            driving = W * math.sin(alpha)
+            sum_resisting += resisting
+            sum_driving += driving
+
+        if sum_driving <= 0:
+            return None
+        return sum_resisting / sum_driving
+
+    def _run_fellenius_on_circles(self, circles: List[Tuple[float, float, float]]) -> MethodResult:
+        best_fos = float("inf")
+        best_circle: Optional[Tuple[float, float, float]] = None
+        for circle in circles:
+            fos = self._fellenius_fos_for_circle(circle)
+            if fos is None:
+                continue
+            if fos < best_fos:
+                best_fos = fos
+                best_circle = circle
+
+        center = None
+        radius = None
+        if best_circle is not None:
+            center = (float(best_circle[0]), float(best_circle[1]))
+            radius = float(best_circle[2])
+        return MethodResult(
+            method_name="Fellenius",
+            fos=float(best_fos if best_fos != float("inf") else 0.0),
+            critical_circle_center=center,
+            critical_circle_radius=radius,
+        )
+
+    def run_comparison(self, iterations: Optional[int] = None, seed: int = 42) -> ComparisonResults:
+        circle_count = iterations if iterations is not None else self._settings.num_iterations
+        circles = self._generate_candidate_circles(circle_count, seed)
+        bishop = self._run_bishop_on_circles(circles)
+        fellenius = self._run_fellenius_on_circles(circles)
+        return ComparisonResults(
+            bishop=bishop,
+            fellenius=fellenius,
+            circle_count=len(circles),
+            seed=seed,
+        )
     
     def _calculate_simplified_fos(self) -> float:
         """

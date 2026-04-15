@@ -2,6 +2,7 @@ import { useState } from 'react'
 import SlopeCanvas from '../canvas/SlopeCanvas.jsx'
 import TabPanel from './TabPanel.jsx'
 import ResultsPanel from '../results/ResultsPanel.jsx'
+import ComparisonPanel from '../results/ComparisonPanel.jsx'
 import DiagramViewer from '../results/DiagramViewer.jsx'
 import { useAnalysis } from '../../hooks/useAnalysis.js'
 import { useResultsStore } from '../../store/resultsStore.js'
@@ -68,7 +69,9 @@ export default function AppShell() {
 
           <div className="results-panel">
             <ResultsPanel isLoading={isPending} error={error} />
-            <div className="results-details" />
+            <div className="results-details">
+              <ComparisonPanel />
+            </div>
           </div>
         </div>
 

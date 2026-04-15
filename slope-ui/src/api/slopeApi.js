@@ -69,6 +69,7 @@ export async function analyzeSlope(payload) {
     status: resultsRes.data.stability_status || resultsRes.data.status,
     method: resultsRes.data.method,
     warnings: resultsRes.data.warnings || [],
+    comparison: resultsRes.data.comparison || null,
     imageUrl,
   }
 }

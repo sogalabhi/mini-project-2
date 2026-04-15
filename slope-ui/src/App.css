@@ -214,10 +214,56 @@ body {
 .results-details {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   font-family: var(--font-mono);
   font-size: 11px;
   line-height: 1.6;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.results-comparison-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.results-comparison-title {
+  font-weight: bold;
+  text-transform: uppercase;
+  font-size: 10px;
+  margin-bottom: 6px;
+}
+
+.results-comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  font-size: 10px;
+}
+
+.results-comparison-table th,
+.results-comparison-table td {
+  border: var(--border-light);
+  padding: 3px 4px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.results-comparison-table th {
+  background-color: #e8e8e8;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.results-comparison-meta {
+  margin-top: 4px;
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.results-comparison-empty {
+  font-size: 10px;
+  color: var(--text-muted);
 }
 
 .results-mini-map {
