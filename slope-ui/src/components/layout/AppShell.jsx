@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import SlopeCanvas from '../canvas/SlopeCanvas.jsx'
 import TabPanel from './TabPanel.jsx'
 import ResultsPanel from '../results/ResultsPanel.jsx'
@@ -25,9 +25,17 @@ function Header({ onRun, isLoading }) {
   )
 }
 
-function ViewerTabs() {
+function ViewerTabs({ isLoading, error }) {
   const [active, setActive] = useState('visualizer')
   const hasImage = !!useResultsStore((s) => s.latest?.imageUrl)
+  const latest = useResultsStore((s) => s.latest)
+  const hasResults = !!latest
+
+  useEffect(() => {
+    if (!isLoading && hasResults) {
+      setActive('reinforcement')
+    }
+  }, [isLoading, hasResults])
 
   return (
     <div className="viewer-tabs-wrapper">
@@ -47,10 +55,26 @@ function ViewerTabs() {
         >
           Image
         </button>
+        <button
+          type="button"
+          className={`viewer-tab${active === 'reinforcement' ? ' active' : ''}${!hasResults ? ' disabled' : ''}`}
+          onClick={() => hasResults && setActive('reinforcement')}
+          disabled={!hasResults}
+        >
+          Results
+        </button>
       </div>
       <div className="canvas-container">
         {active === 'visualizer' && <SlopeCanvas />}
         {active === 'image' && <DiagramViewer />}
+        {active === 'reinforcement' && (
+          <div className="reinforcement-tab-layout">
+            <div className="reinforcement-results-wrap">
+              <ResultsPanel isLoading={isLoading} error={error} showReinforcement />
+              <ComparisonPanel />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
@@ -65,14 +89,7 @@ export default function AppShell() {
 
       <div className="main-workspace">
         <div className="left-column">
-          <ViewerTabs />
-
-          <div className="results-panel">
-            <ResultsPanel isLoading={isPending} error={error} />
-            <div className="results-details">
-              <ComparisonPanel />
-            </div>
-          </div>
+          <ViewerTabs isLoading={isPending} error={error} />
         </div>
 
         <div className="right-column">

@@ -200,6 +200,7 @@ class AnalysisResults:
     load_count: int = 0
     has_water_table: bool = False
     raw_results: Optional[Any] = None
+    reinforcement: Optional[Dict[str, Any]] = None
     
     def __post_init__(self):
         """Classify stability status based on FOS."""
@@ -222,7 +223,8 @@ class AnalysisResults:
             'slope_geometry': self.slope_geometry,
             'material_count': self.material_count,
             'load_count': self.load_count,
-            'has_water_table': self.has_water_table
+            'has_water_table': self.has_water_table,
+            'reinforcement': self.reinforcement,
         }
     
     def is_stable(self, minimum_fos: float = 1.0) -> bool:
@@ -285,6 +287,28 @@ class ComparisonResults:
             "circle_count": self.circle_count,
             "seed": self.seed,
         }
+
+
+@dataclass(frozen=True)
+class ReinforcementConfig:
+    """Configuration inputs for practical soil nail design recommendations."""
+    enabled: bool = True
+    target_fos: float = 1.5
+    steel_yield_strength: float = 415.0
+    soil_grout_bond_friction: float = 100.0
+
+    def __post_init__(self):
+        if self.target_fos <= 1.0:
+            raise ValueError(f"Target FOS must be greater than 1.0, got {self.target_fos}")
+        if self.steel_yield_strength <= 0:
+            raise ValueError(
+                f"Steel yield strength must be positive, got {self.steel_yield_strength}"
+            )
+        if self.soil_grout_bond_friction <= 0:
+            raise ValueError(
+                "Soil-grout bond friction must be positive, "
+                f"got {self.soil_grout_bond_friction}"
+            )
 
 
 # ============================================================================
@@ -391,6 +415,7 @@ class SlopeStabilityAnalyzer:
         self._materials: List[Material] = []
         self._loads: List[Union[UniformLoad, LineLoad]] = []
         self._water_table: Optional[WaterTable] = None
+        self._reinforcement: Optional[ReinforcementConfig] = None
         self._settings: AnalysisSettings = AnalysisSettings()
         
         # Analysis state
@@ -557,6 +582,22 @@ class SlopeStabilityAnalyzer:
         self._water_table = None
         self._analysis_complete = False
         return self
+
+    def configure_reinforcement(self,
+                                enabled: bool = True,
+                                target_fos: float = 1.5,
+                                steel_yield_strength: float = 415.0,
+                                soil_grout_bond_friction: float = 100.0
+                                ) -> 'SlopeStabilityAnalyzer':
+        """Configure reinforcement design settings for post-analysis recommendations."""
+        self._reinforcement = ReinforcementConfig(
+            enabled=enabled,
+            target_fos=target_fos,
+            steel_yield_strength=steel_yield_strength,
+            soil_grout_bond_friction=soil_grout_bond_friction,
+        )
+        self._analysis_complete = False
+        return self
     
     # ------------------------------------------------------------------------
     # Analysis Settings
@@ -683,6 +724,8 @@ class SlopeStabilityAnalyzer:
             circle_center = (float(circle[0]), float(circle[1]))
             circle_radius = float(circle[2])
 
+        reinforcement_design = self._design_reinforcement(fos)
+
         return AnalysisResults(
             factor_of_safety=fos,
             status=StabilityStatus.STABLE,
@@ -697,7 +740,107 @@ class SlopeStabilityAnalyzer:
             load_count=len(self._loads),
             has_water_table=self._water_table is not None,
             raw_results=slope,
+            reinforcement=reinforcement_design,
         )
+
+    def _estimate_driving_force(self) -> float:
+        """Estimate driving force in kN/m using slope self-weight and external loads."""
+        if self._materials:
+            avg_gamma = sum(m.unit_weight for m in self._materials) / len(self._materials)
+        else:
+            avg_gamma = 18.0
+
+        slope_area = 0.5 * self._height * self._length
+        slope_weight = avg_gamma * slope_area
+        driving_from_weight = slope_weight * math.sin(math.radians(self._angle))
+
+        udl_contrib = sum(
+            load.magnitude * load.length for load in self._loads if isinstance(load, UniformLoad)
+        )
+        ll_contrib = sum(
+            load.magnitude for load in self._loads if isinstance(load, LineLoad)
+        )
+        return max(1.0, driving_from_weight + udl_contrib + ll_contrib)
+
+    def _design_reinforcement(self, fos: float) -> Optional[Dict[str, Any]]:
+        """Generate practical soil nail recommendations when FOS is below target."""
+        if self._reinforcement is None:
+            return None
+
+        cfg = self._reinforcement
+        if not cfg.enabled:
+            return {
+                "required": False,
+                "enabled": False,
+                "target_fos": cfg.target_fos,
+                "message": "Reinforcement design disabled by input settings.",
+            }
+
+        if fos >= cfg.target_fos:
+            return {
+                "required": False,
+                "enabled": True,
+                "target_fos": cfg.target_fos,
+                "current_fos": fos,
+                "message": "No reinforcement required. Current FOS already meets target.",
+            }
+
+        driving_force = self._estimate_driving_force()
+        delta_r = max(0.0, (cfg.target_fos - fos) * driving_force)
+
+        spacing_v = max(1.0, min(2.0, round(self._height / max(2, round(self._height / 1.5)), 2)))
+        rows = max(2, int(math.ceil(self._height / spacing_v)))
+        spacing_h_initial = 1.5
+        cols_initial = max(1, int(math.ceil(self._length / spacing_h_initial)))
+        initial_nails = max(1, rows * cols_initial)
+        t_design = (delta_r / initial_nails) * 1.25
+
+        as_mm2 = (t_design * 1000.0) / (0.55 * cfg.steel_yield_strength)
+        dia_mm = math.sqrt((4.0 * as_mm2) / math.pi)
+        available_diams = [12, 16, 20, 25, 28, 32]
+        recommended_d_mm = next((d for d in available_diams if d >= dia_mm), available_diams[-1])
+
+        d_m = recommended_d_mm / 1000.0
+        tau = cfg.soil_grout_bond_friction
+        pullout_embedment = t_design / max(1e-6, math.pi * d_m * tau)
+        stable_zone_embedment = max(1.0, 0.25 * self._height)
+        free_length = max(2.0, 0.35 * self._height)
+        total_length = free_length + stable_zone_embedment + pullout_embedment
+        total_length = round(max(3.0, total_length), 1)
+
+        capacity_per_nail = max(1e-6, (math.pi * d_m * tau * pullout_embedment) / 1.25)
+        required_nails = max(1, int(math.ceil(delta_r / capacity_per_nail)))
+        cols = max(1, int(math.ceil(required_nails / rows)))
+        spacing_h = round(max(1.0, min(2.5, self._length / cols)), 1)
+        spacing_v = round(max(1.0, min(2.0, self._height / rows)), 1)
+
+        return {
+            "required": True,
+            "enabled": True,
+            "target_fos": round(cfg.target_fos, 3),
+            "current_fos": round(fos, 3),
+            "delta_r": round(delta_r, 2),
+            "design_tension_per_nail_kn": round(t_design, 2),
+            "steel_yield_strength_mpa": round(cfg.steel_yield_strength, 2),
+            "as_required_mm2": round(as_mm2, 2),
+            "recommended_diameter_mm": int(recommended_d_mm),
+            "recommended_length_m": total_length,
+            "spacing_v_m": spacing_v,
+            "spacing_h_m": spacing_h,
+            "nail_angle_deg": 15.0,
+            "estimated_rows": rows,
+            "estimated_columns": cols,
+            "assumptions": [
+                "Practical design defaults are used for driving force normalization.",
+                "Steel area is computed as As = Tdesign / (0.55 * fy).",
+                "Bond friction is treated as allowable pullout resistance along nail perimeter.",
+            ],
+            "message": (
+                "Slope Unstable. Recommended Design: Use "
+                f"{int(recommended_d_mm)}mm diameter soil nails, {total_length} meters long, "
+                f"spaced at {spacing_h}m horizontal and {spacing_v}m vertical intervals."
+            ),
+        }
 
     def _build_pyslope_model(self):
         import pyslope
@@ -880,6 +1023,10 @@ class SlopeStabilityAnalyzer:
             return None
 
         m = self._height / self._length
+        water_table_y = None
+        if self._water_table is not None:
+            # Water table elevation measured from crest datum.
+            water_table_y = self._height - self._water_table.depth
         sum_resisting = 0.0
         sum_driving = 0.0
 
@@ -912,10 +1059,9 @@ class SlopeStabilityAnalyzer:
                         W += load.magnitude
 
             u = 0.0
-            if self._water_table is not None:
-                if slice_height > self._water_table.depth:
-                    head = slice_height - self._water_table.depth
-                    u = self._water_table.unit_weight * head
+            if water_table_y is not None:
+                head = max(0.0, water_table_y - y_base)
+                u = self._water_table.unit_weight * head
 
             N_eff = W * math.cos(alpha) - u * l_base
             resisting = cohesion * l_base + max(0.0, N_eff) * math.tan(math.radians(phi))

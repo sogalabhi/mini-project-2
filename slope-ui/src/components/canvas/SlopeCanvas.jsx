@@ -4,11 +4,13 @@ import { useGeometryStore } from '../../store/geometryStore.js'
 import { useMaterialsStore } from '../../store/materialsStore.js'
 import { useLoadsStore } from '../../store/loadsStore.js'
 import { useWaterStore } from '../../store/waterStore.js'
+import { useResultsStore } from '../../store/resultsStore.js'
 import { useCanvasCoords } from '../../hooks/useCanvasCoords.js'
 import GridBackground from './GridBackground.jsx'
 import SoilLayerBands from './SoilLayerBands.jsx'
 import WaterTableLine from './WaterTableLine.jsx'
 import SlopeShape from './SlopeShape.jsx'
+import NailVisuals from './NailVisuals.jsx'
 import LoadArrows from './LoadArrows.jsx'
 import DimensionLabels from './DimensionLabels.jsx'
 
@@ -30,6 +32,7 @@ export default function SlopeCanvas() {
   const { layers } = useMaterialsStore()
   const { udls, lineLoads } = useLoadsStore()
   const water = useWaterStore()
+  const reinforcement = useResultsStore((s) => s.latest?.reinforcement)
 
   const H = height || 10
   const A = angle || 30
@@ -68,6 +71,14 @@ export default function SlopeCanvas() {
         <Layer>
           <SlopeShape
             coords={coords}
+            height={H}
+            length={L}
+          />
+        </Layer>
+        <Layer>
+          <NailVisuals
+            coords={coords}
+            reinforcement={reinforcement}
             height={H}
             length={L}
           />

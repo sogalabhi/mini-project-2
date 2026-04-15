@@ -52,6 +52,13 @@ class SettingsInput(BaseModel):
     tolerance: float = 0.001
 
 
+class ReinforcementInput(BaseModel):
+    enabled: bool = True
+    target_fos: float = 1.5
+    steel_yield_strength: float = 415.0
+    soil_grout_bond_friction: float = 100.0
+
+
 class AnalysisPayload(BaseModel):
     geometry: GeometryInput
     layers: list[LayerInput]
@@ -60,6 +67,7 @@ class AnalysisPayload(BaseModel):
     water_table_depth: Optional[float] = None
     water_unit_weight: float = 9.81
     settings: SettingsInput = SettingsInput()
+    reinforcement: Optional[ReinforcementInput] = None
 
 
 # ---------------------------------------------------------------------------
@@ -117,6 +125,15 @@ def build_analyzer(payload: AnalysisPayload) -> SlopeStabilityAnalyzer:
         tolerance=s.tolerance,
     )
 
+    if payload.reinforcement is not None:
+        r = payload.reinforcement
+        analyzer.configure_reinforcement(
+            enabled=r.enabled,
+            target_fos=r.target_fos,
+            steel_yield_strength=r.steel_yield_strength,
+            soil_grout_bond_friction=r.soil_grout_bond_friction,
+        )
+
     return analyzer
 
 
@@ -157,6 +174,7 @@ def analyze_slope(data: AnalysisPayload):
         "stability_status": results.status.value,
         "method": "Bishop",
         "warnings": [],
+        "reinforcement": results.reinforcement,
         "comparison": comparison.to_dict(),
     }
 

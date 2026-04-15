@@ -167,6 +167,31 @@ body {
   flex-grow: 1;
 }
 
+.reinforcement-tab-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--panel-bg);
+  overflow: auto;
+}
+
+.reinforcement-results-wrap {
+  height: 100%;
+  border-top: none;
+  padding: 8px;
+  background: var(--panel-bg);
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 12px;
+  min-height: 0;
+}
+
+@media (max-width: 1100px) {
+  .reinforcement-results-wrap {
+    grid-template-columns: 1fr;
+  }
+}
+
 .results-panel {
   height: 140px;
   border-top: var(--border-heavy);

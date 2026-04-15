@@ -4,6 +4,7 @@ import MaterialsPanel from '../panels/MaterialsPanel.jsx'
 import LoadsPanel from '../panels/LoadsPanel.jsx'
 import WaterPanel from '../panels/WaterPanel.jsx'
 import SettingsPanel from '../panels/SettingsPanel.jsx'
+import ReinforcementPanel from '../panels/ReinforcementPanel.jsx'
 
 const TABS = [
   { id: 'geometry', label: 'Geometry' },
@@ -11,6 +12,7 @@ const TABS = [
   { id: 'loads', label: 'Loads' },
   { id: 'water', label: 'Water' },
   { id: 'settings', label: 'Settings' },
+  { id: 'reinforcement', label: 'Results' },
 ]
 
 export default function TabPanel() {
@@ -40,6 +42,7 @@ export default function TabPanel() {
         {active === 'loads' && <LoadsPanel />}
         {active === 'water' && <WaterPanel />}
         {active === 'settings' && <SettingsPanel />}
+        {active === 'reinforcement' && <ReinforcementPanel />}
       </div>
     </div>
   )

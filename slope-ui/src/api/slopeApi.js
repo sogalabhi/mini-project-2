@@ -13,6 +13,7 @@ export function buildAnalysisPayload({
   lineLoads,
   water,
   settings,
+  reinforcement,
 }) {
   return {
     geometry: {
@@ -43,6 +44,12 @@ export function buildAnalysisPayload({
       num_iterations: settings.numIterations,
       tolerance: settings.tolerance,
     },
+    reinforcement: {
+      enabled: reinforcement.enabled,
+      target_fos: reinforcement.targetFos,
+      steel_yield_strength: reinforcement.steelYieldStrength,
+      soil_grout_bond_friction: reinforcement.soilGroutBondFriction,
+    },
   }
 }
 
@@ -69,6 +76,7 @@ export async function analyzeSlope(payload) {
     status: resultsRes.data.stability_status || resultsRes.data.status,
     method: resultsRes.data.method,
     warnings: resultsRes.data.warnings || [],
+    reinforcement: resultsRes.data.reinforcement || null,
     comparison: resultsRes.data.comparison || null,
     imageUrl,
   }

@@ -5,6 +5,7 @@ import { useMaterialsStore } from '../store/materialsStore.js'
 import { useLoadsStore } from '../store/loadsStore.js'
 import { useWaterStore } from '../store/waterStore.js'
 import { useSettingsStore } from '../store/settingsStore.js'
+import { useReinforcementStore } from '../store/reinforcementStore.js'
 import { useResultsStore } from '../store/resultsStore.js'
 
 function getPayloadFromStores() {
@@ -15,6 +16,7 @@ function getPayloadFromStores() {
     lineLoads: useLoadsStore.getState().lineLoads,
     water: useWaterStore.getState(),
     settings: useSettingsStore.getState(),
+    reinforcement: useReinforcementStore.getState(),
   })
 }
 
