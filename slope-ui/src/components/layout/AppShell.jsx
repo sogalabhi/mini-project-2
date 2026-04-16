@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import SlopeCanvas from '../canvas/SlopeCanvas.jsx'
 import TabPanel from './TabPanel.jsx'
 import ResultsPanel from '../results/ResultsPanel.jsx'
@@ -12,6 +13,9 @@ function Header({ onRun, isLoading }) {
     <header className="app-header">
       <div className="branding">
         <span>Slope Stability Analyzer</span>
+        <Link to="/analysis-3d" className="mode-link">
+          Switch to 3D
+        </Link>
       </div>
       <button
         type="button"
@@ -30,12 +34,6 @@ function ViewerTabs({ isLoading, error }) {
   const hasImage = !!useResultsStore((s) => s.latest?.imageUrl)
   const latest = useResultsStore((s) => s.latest)
   const hasResults = !!latest
-
-  useEffect(() => {
-    if (!isLoading && hasResults) {
-      setActive('reinforcement')
-    }
-  }, [isLoading, hasResults])
 
   return (
     <div className="viewer-tabs-wrapper">

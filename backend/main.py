@@ -7,14 +7,32 @@ _root = Path(__file__).resolve().parent.parent
 if str(_root) not in sys.path:
     sys.path.insert(0, str(_root))
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import Optional
 
 from slope_analyzer import SlopeStabilityAnalyzer
+from backend.routes.api_v1_3d import router as api_v1_3d_router
 
 app = FastAPI()
+MAX_REQUEST_BYTES = 2_000_000
+
+
+@app.middleware("http")
+async def enforce_request_size(request: Request, call_next):
+    content_length = request.headers.get("content-length")
+    if content_length is not None:
+        try:
+            if int(content_length) > MAX_REQUEST_BYTES:
+                return JSONResponse(
+                    status_code=413,
+                    content={"detail": {"code": "payload_too_large", "message": "request payload exceeds 2MB limit"}},
+                )
+        except ValueError:
+            pass
+    return await call_next(request)
 
 
 # ---------------------------------------------------------------------------
@@ -194,3 +212,6 @@ def analyze_slope_image(data: AnalysisPayload):
         io.BytesIO(png_bytes),
         media_type="image/png",
     )
+
+
+app.include_router(api_v1_3d_router)
