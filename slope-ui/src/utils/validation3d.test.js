@@ -32,7 +32,7 @@ const validState = {
   },
   materials: [{ key: 'default', name: 'default', modelType: 1, unitWeight: 18, params: { phi: 30, cohesion: 5 } }],
   hydro: { waterLevelZ: null },
-  advanced: { includeAnalysisRows: false },
+  advanced: { includeAnalysisRows: false, includeRenderGeometry: true },
   reinforcement: {
     enabled: false,
     diameter: 0.1,
@@ -68,5 +68,6 @@ test('build3dPayload maps keys correctly', () => {
   assert.equal(payload.top_surface.interpolation_mode, 'a1')
   assert.deepEqual(payload.materials.default.model_parameters, [30, 5])
   assert.equal(payload.reinforcement.enabled, false)
+  assert.equal(payload.debug.include_render_geometry, true)
 })
 

@@ -17,7 +17,15 @@ export default function Preview3DPanel() {
     showSlip: true,
     showGrid: true,
     showAxes: true,
+    showTerrainMesh: true,
+    showSlipMesh: true,
+    showColumnCenters: true,
+    showColumnLines: true,
+    showColumnPrisms: false,
+    showMorphology: false,
     pointSize: 0.06,
+    meshOpacity: 0.45,
+    prismMaxColumns: 1500,
     overlayMode: 'none',
   })
 
@@ -35,6 +43,11 @@ export default function Preview3DPanel() {
       result: resultState.latestSingle,
     })
   }, [resultState.lastPayload, resultState.latestSingle, formState])
+  const warnings = [...(model?.renderDiagnostics?.warnings ?? [])]
+  const activeColumns = model?.columnGeometry?.columns?.length ?? 0
+  if (controls.showColumnPrisms && activeColumns > controls.prismMaxColumns) {
+    warnings.push('Prism view capped for performance; showing lines/centers.')
+  }
 
   return (
     <div className="preview3d-layout">
@@ -43,12 +56,20 @@ export default function Preview3DPanel() {
         onToggle={(key) => setControls((s) => ({ ...s, [key]: !s[key] }))}
         onPointSize={(pointSize) => setControls((s) => ({ ...s, pointSize }))}
         onOverlayMode={(overlayMode) => setControls((s) => ({ ...s, overlayMode }))}
+        onOpacity={(meshOpacity) => setControls((s) => ({ ...s, meshOpacity }))}
+        onPrismMaxColumns={(prismMaxColumns) => setControls((s) => ({ ...s, prismMaxColumns }))}
         onResetCamera={() => setCameraResetToken((v) => v + 1)}
         selectedColumnId={selectedColumnId}
         reinforcementEnabled={reinforcementEnabled}
+        warnings={warnings}
       />
       <div className="preview3d-canvas-wrap">
-        <Scene3DCanvas model={model} controls={controls} cameraResetToken={cameraResetToken} />
+        <Scene3DCanvas
+          model={model}
+          controls={controls}
+          cameraResetToken={cameraResetToken}
+          selectedColumnId={selectedColumnId}
+        />
       </div>
     </div>
   )

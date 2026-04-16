@@ -77,7 +77,7 @@ export const form3dSchema = z.object({
   }),
   materials: z.array(materialSchema).min(1),
   hydro: z.object({ waterLevelZ: z.number().nullable() }),
-  advanced: z.object({ includeAnalysisRows: z.boolean() }),
+  advanced: z.object({ includeAnalysisRows: z.boolean(), includeRenderGeometry: z.boolean() }),
   reinforcement: reinforcementSchema,
 })
 
@@ -201,6 +201,7 @@ export function build3dPayload(state) {
     },
     debug: {
       include_analysis_rows: state.advanced.includeAnalysisRows,
+      include_render_geometry: state.advanced.includeRenderGeometry,
     },
   }
 }

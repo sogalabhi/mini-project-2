@@ -52,10 +52,23 @@ Reinforcement object shape:
 - `direction_results[]`
 - `diagnostics.pipeline`
 - `diagnostics.method`
+- optional `render_data` (when `debug.include_render_geometry=true`)
 - method diagnostics include reinforcement metrics when enabled:
   - `t_y`, `t_bond`, `t_max`, `q_nail`, `total_added_resistance`
 - `generated_files[]`
 - optional `analysis_rows[]` when debug flag is enabled and within row limits
+
+`render_data` shape (preview contract):
+
+- `top_surface_points[]`: normalized `{x,y,z}` points used by terrain layer
+- `columns[]`: `{column_id, x_center, y_center, z_top, z_base, thickness, is_active}`
+- `fs_field`:
+  - `scalar_by_column_id` (local proxy values)
+  - `min`, `max`
+  - `units`, `mapping_mode`
+- `morphology`:
+  - `method`, `confidence`
+  - `crest_ids[]`, `face_ids[]`, `toe_ids[]`
 
 ## Error Envelope
 
@@ -89,6 +102,8 @@ On payload too large (`413`):
   - 3D -> `POST /api/v1/3d/analyze`
 - Render stable fields first (`fs_min`, `critical_direction_rad`, `converged`, diagnostics summary).
 - Keep `analysis_rows` opt-in only; payload may be large.
+- `debug.include_render_geometry` defaults true for preview layers.
+- For heavy scenes, frontend should cap prism rendering and auto-fallback to lines/centers.
 - Recommended reinforcement disclaimer string:
   - "Simplified phase-2 uniform column-based reinforcement approximation; full direction-aware intersection is deferred."
 

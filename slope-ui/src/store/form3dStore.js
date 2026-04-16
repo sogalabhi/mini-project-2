@@ -61,7 +61,7 @@ export const useForm3dStore = create((set) => ({
   },
   materials: [defaultMaterial],
   hydro: { waterLevelZ: null },
-  advanced: { includeAnalysisRows: false },
+  advanced: { includeAnalysisRows: false, includeRenderGeometry: true },
   reinforcement: {
     enabled: false,
     diameter: 0.1,

@@ -19,6 +19,14 @@ export default function Advanced3DPanel() {
           onChange={(e) => setAdvanced({ includeAnalysisRows: e.target.checked })}
         />
       </div>
+      <div className="input-row">
+        <div className="input-label">Render data</div>
+        <input
+          type="checkbox"
+          checked={advanced.includeRenderGeometry}
+          onChange={(e) => setAdvanced({ includeRenderGeometry: e.target.checked })}
+        />
+      </div>
       {projectedRows > 20000 && (
         <div style={{ color: 'var(--status-red)' }}>
           Warning: projected rows {projectedRows} exceed safe debug threshold.

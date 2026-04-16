@@ -37,7 +37,12 @@ def analyze_3d(data: Analyze3DRequest):
     try:
         kwargs = build_pipeline_kwargs(data)
         result = run_pipeline(**kwargs)
-        return normalize_pipeline_result(result, include_rows=data.debug.include_analysis_rows)
+        return normalize_pipeline_result(
+            result,
+            include_rows=data.debug.include_analysis_rows,
+            include_render_geometry=data.debug.include_render_geometry,
+            request_payload=data,
+        )
     except Exception as exc:
         raise normalize_exception(exc) from exc
 
@@ -61,7 +66,12 @@ def analyze_3d_multi(data: Analyze3DMultiRequest):
             per_method.method_config.method_id = method_id
             kwargs = build_pipeline_kwargs(per_method)
             result = run_pipeline(**kwargs)
-            normalized = normalize_pipeline_result(result, include_rows=per_method.debug.include_analysis_rows)
+            normalized = normalize_pipeline_result(
+                result,
+                include_rows=per_method.debug.include_analysis_rows,
+                include_render_geometry=per_method.debug.include_render_geometry,
+                request_payload=per_method,
+            )
             summaries.append(
                 {
                     "method_id": method_id,
@@ -70,6 +80,7 @@ def analyze_3d_multi(data: Analyze3DMultiRequest):
                     "critical_direction_rad": normalized["critical_direction_rad"],
                     "converged": normalized["converged"],
                     "diagnostics": normalized["diagnostics"],
+                    "render_data": normalized.get("render_data"),
                 }
             )
         except Exception as exc:

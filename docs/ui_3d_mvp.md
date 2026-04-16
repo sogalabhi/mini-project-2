@@ -65,3 +65,12 @@ Expected:
 - Preview tab includes static top-surface points, slip wireframe, and grid bounds.
 - Interactive visualizer depth remains limited to controls/toggles in post-MVP renderer phase.
 
+## Advanced Preview Layers (Current)
+
+- Terrain mesh layer can be rendered from top-surface points (points-only fallback still available).
+- Slip rendering supports ellipsoid mesh/wireframe and user-defined triangulation fallback.
+- Column layers include centers and vertical lines from `render_data.columns`.
+- Prism rendering is performance-gated with a configurable cap and automatic fallback message.
+- FS heatmap uses per-column scalar proxy values from backend `render_data.fs_field`.
+- Morphology overlay (crest/face/toe) is read from backend `render_data.morphology` when provided.
+

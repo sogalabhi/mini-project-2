@@ -1,6 +1,7 @@
 import importlib
+import math
 from dataclasses import asdict
-from typing import Any, Dict
+from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 from fastapi import HTTPException
 
@@ -111,7 +112,97 @@ def build_pipeline_kwargs(payload: Analyze3DRequest) -> Dict[str, Any]:
     }
 
 
-def normalize_pipeline_result(result: Any, include_rows: bool) -> Dict[str, Any]:
+def _safe_float(value: Any, default: float = 0.0) -> float:
+    try:
+        out = float(value)
+    except (TypeError, ValueError):
+        return default
+    if not math.isfinite(out):
+        return default
+    return out
+
+
+def _quantile(values: List[float], q: float) -> float:
+    if not values:
+        return 0.0
+    ordered = sorted(values)
+    idx = int(max(0, min(len(ordered) - 1, round((len(ordered) - 1) * q))))
+    return ordered[idx]
+
+
+def _build_render_data(
+    result: Any,
+    request_payload: Optional[Analyze3DRequest],
+) -> Dict[str, Any]:
+    rows = list(result.analysis_rows or [])
+    columns = []
+    fs_by_column: Dict[str, float] = {}
+    morphology = {"method": "quantile_z", "confidence": 0.55, "crest_ids": [], "face_ids": [], "toe_ids": []}
+
+    top_points: List[Dict[str, float]] = []
+    if request_payload and request_payload.top_surface is not None:
+        for point in request_payload.top_surface.points:
+            top_points.append({"x": _safe_float(point.x), "y": _safe_float(point.y), "z": _safe_float(point.z)})
+
+    if top_points:
+        z_vals = [_safe_float(p["z"]) for p in top_points]
+        crest_cut = _quantile(z_vals, 0.8)
+        toe_cut = _quantile(z_vals, 0.2)
+        for index, point in enumerate(top_points):
+            if point["z"] >= crest_cut:
+                morphology["crest_ids"].append(index)
+            elif point["z"] <= toe_cut:
+                morphology["toe_ids"].append(index)
+            else:
+                morphology["face_ids"].append(index)
+
+    for row in rows:
+        state = row.column_state
+        phi = _safe_float(getattr(state, "friction_angle_rad", 0.0))
+        cohesion = _safe_float(getattr(state, "cohesion", 0.0))
+        eff_n = _safe_float(getattr(state, "effective_normal_stress", 0.0))
+        weight = max(1e-9, _safe_float(getattr(state, "weight", 0.0)))
+        dip = _safe_float(getattr(state, "base_dip_rad", 0.0))
+        resist_proxy = cohesion + eff_n * math.tan(max(-1.3, min(1.3, phi)))
+        drive_proxy = max(1e-6, weight * abs(math.sin(dip)))
+        local_fs = max(0.0, min(5.0, resist_proxy / drive_proxy))
+        fs_by_column[str(row.column_id)] = local_fs
+        columns.append(
+            {
+                "column_id": int(row.column_id),
+                "x_center": _safe_float(state.center_x),
+                "y_center": _safe_float(state.center_y),
+                "z_top": _safe_float(state.z_top),
+                "z_base": _safe_float(state.z_bottom),
+                "thickness": max(0.0, _safe_float(state.z_top) - _safe_float(state.z_bottom)),
+                "is_active": True,
+            }
+        )
+
+    fs_values = list(fs_by_column.values())
+    fs_min = min(fs_values) if fs_values else None
+    fs_max = max(fs_values) if fs_values else None
+
+    return {
+        "top_surface_points": top_points,
+        "columns": columns,
+        "fs_field": {
+            "scalar_by_column_id": fs_by_column,
+            "min": fs_min,
+            "max": fs_max,
+            "units": "proxy",
+            "mapping_mode": "local_fs_proxy",
+        },
+        "morphology": morphology,
+    }
+
+
+def normalize_pipeline_result(
+    result: Any,
+    include_rows: bool,
+    include_render_geometry: bool = True,
+    request_payload: Optional[Analyze3DRequest] = None,
+) -> Dict[str, Any]:
     method = result.method_result
     direction_results = []
     if method is not None:
@@ -142,6 +233,8 @@ def normalize_pipeline_result(result: Any, include_rows: bool) -> Dict[str, Any]
     }
     if include_rows:
         payload["analysis_rows"] = [asdict(row) for row in result.analysis_rows]
+    if include_render_geometry:
+        payload["render_data"] = _build_render_data(result, request_payload=request_payload)
     return payload
 
 

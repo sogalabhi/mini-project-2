@@ -12,6 +12,7 @@ export default function Diagnostics3DPanel() {
   if (!result?.diagnostics) return <div className="results-comparison-empty">Diagnostics appear after analysis.</div>
   const reinforcementEnabled = Boolean(payload?.reinforcement?.enabled)
   const methodDiag = result.diagnostics.method ?? {}
+  const renderData = result.render_data ?? null
 
   return (
     <div className="results-details">
@@ -56,6 +57,22 @@ export default function Diagnostics3DPanel() {
       )}
       <div className="results-comparison-title">Method diagnostics</div>
       <pre className="json-preview">{JSON.stringify(result.diagnostics.method, null, 2)}</pre>
+      {renderData && (
+        <>
+          <div className="results-comparison-title">Render diagnostics</div>
+          <pre className="json-preview">
+            {JSON.stringify(
+              {
+                column_count: renderData.columns?.length ?? 0,
+                fs_field_range: [renderData.fs_field?.min ?? null, renderData.fs_field?.max ?? null],
+                morphology_method: renderData.morphology?.method ?? null,
+              },
+              null,
+              2,
+            )}
+          </pre>
+        </>
+      )}
     </div>
   )
 }

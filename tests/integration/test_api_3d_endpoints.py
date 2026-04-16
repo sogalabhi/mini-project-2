@@ -67,7 +67,7 @@ def _base_3d_payload(method_id: int = 1) -> dict:
             "inclination_deg": 0.0,
             "include_vertical_component": False,
         },
-        "debug": {"include_analysis_rows": False},
+        "debug": {"include_analysis_rows": False, "include_render_geometry": True},
     }
 
 
@@ -88,6 +88,9 @@ def test_3d_analyze_happy_path_returns_normalized_result() -> None:
     assert "critical_direction_rad" in body
     assert "direction_results" in body
     assert "diagnostics" in body
+    assert "render_data" in body
+    assert "columns" in body["render_data"]
+    assert "fs_field" in body["render_data"]
     assert "analysis_rows" not in body
     assert "t_max" in body["diagnostics"]["method"]
 

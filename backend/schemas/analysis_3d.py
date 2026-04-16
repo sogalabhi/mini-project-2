@@ -127,6 +127,7 @@ class SlipSurfaceConfigInput(BaseModel):
 
 class DebugOptionsInput(BaseModel):
     include_analysis_rows: bool = False
+    include_render_geometry: bool = True
 
 
 class Analyze3DRequest(BaseModel):
