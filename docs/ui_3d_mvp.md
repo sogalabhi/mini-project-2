@@ -26,6 +26,13 @@ API integration against `/api/v1/3d/*`.
 - Interactive 3D visualizer is intentionally deferred in MVP.
 - CSV upload workflows are deferred; manual points are used in this phase.
 
+## Model Fidelity (Reinforcement)
+
+- Current reinforcement behavior is a simplified phase-2 engineering approximation.
+- It uses a uniform per-column added resistance model for FS impact.
+- Full direction-aware nail-slip intersection remains deferred.
+- Treat reinforcement-driven FS gain as model-relative guidance, not an exact field prediction.
+
 ## QA Checklist
 
 - [ ] 2D route still works unchanged.
@@ -33,6 +40,8 @@ API integration against `/api/v1/3d/*`.
 - [ ] Single run shows FS/critical direction/convergence.
 - [ ] Multi run shows mixed success/failure rows correctly.
 - [ ] Payload preview matches submitted JSON exactly.
+- [ ] Reinforcement messaging appears only when reinforcement is enabled.
+- [ ] No reinforcement UI string claims exact/full-real/rigorous modeling.
 
 ## Golden Scenario (Baseline Lock)
 

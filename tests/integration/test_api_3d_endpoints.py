@@ -55,6 +55,18 @@ def _base_3d_payload(method_id: int = 1) -> dict:
         "surface_types": None,
         "interpolation_modes": None,
         "water_level_z": None,
+        "reinforcement": {
+            "enabled": False,
+            "diameter": 0.025,
+            "length_embed": 6.0,
+            "spacing_x": 2.0,
+            "spacing_y": 2.0,
+            "steel_area": 0.0005,
+            "yield_strength": 500000.0,
+            "bond_strength": 150.0,
+            "inclination_deg": 0.0,
+            "include_vertical_component": False,
+        },
         "debug": {"include_analysis_rows": False},
     }
 
@@ -77,6 +89,7 @@ def test_3d_analyze_happy_path_returns_normalized_result() -> None:
     assert "direction_results" in body
     assert "diagnostics" in body
     assert "analysis_rows" not in body
+    assert "t_max" in body["diagnostics"]["method"]
 
 
 def test_3d_analyze_invalid_method_schema_rejected() -> None:
@@ -127,4 +140,24 @@ def test_3d_multi_returns_partial_results_for_invalid_method_id() -> None:
     assert len(body["results"]) == 2
     assert any(item["ok"] is True for item in body["results"])
     assert any(item["ok"] is False for item in body["results"])
+
+
+def test_3d_analyze_reinforcement_payload_applied_and_reported() -> None:
+    payload = _base_3d_payload(method_id=1)
+    payload["reinforcement"]["enabled"] = True
+    payload["reinforcement"]["steel_area"] = 0.0004
+    payload["reinforcement"]["yield_strength"] = 200000.0
+    response = client.post("/api/v1/3d/analyze", json=payload)
+    assert response.status_code == 200
+    body = response.json()
+    method_diag = body["diagnostics"]["method"]
+    assert method_diag["enabled"] == 1.0
+    assert method_diag["t_max"] > 0.0
+
+
+def test_3d_analyze_reinforcement_invalid_schema_rejected() -> None:
+    payload = _base_3d_payload(method_id=1)
+    payload["reinforcement"]["spacing_x"] = -1.0
+    response = client.post("/api/v1/3d/analyze", json=payload)
+    assert response.status_code == 422
 

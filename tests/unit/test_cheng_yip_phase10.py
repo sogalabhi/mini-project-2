@@ -8,6 +8,9 @@ SolverConfig = importlib.import_module("3d_slope_stability.config.method_options
 DirectionSearchConfig = importlib.import_module(
     "3d_slope_stability.config.method_options"
 ).DirectionSearchConfig
+ReinforcementConfig = importlib.import_module(
+    "3d_slope_stability.config.method_options"
+).ReinforcementConfig
 models = importlib.import_module("3d_slope_stability.domain.models")
 AnalysisRow = models.AnalysisRow
 ColumnState = models.ColumnState
@@ -89,4 +92,32 @@ def test_cheng_yip_corrected_janbu_not_lower_than_simplified() -> None:
 
     assert simple.fs_min is not None and corrected.fs_min is not None
     assert corrected.fs_min >= simple.fs_min
+
+
+def test_cheng_yip_reinforcement_increases_fs() -> None:
+    rows = [_row(1, cohesion=6.0), _row(2, cohesion=6.0), _row(3, cohesion=6.0)]
+    solver = SolverConfig(max_iterations=150, tol_fs=1e-4, damping=1.0)
+    direction = DirectionSearchConfig(spacing_deg=2.0, tolerance_deg=0.0)
+    off = run_cheng_yip(
+        rows,
+        MethodRunConfig(
+            method_id=4,
+            solver=solver,
+            direction=direction,
+            reinforcement=ReinforcementConfig(enabled=False),
+        ),
+    )
+    on = run_cheng_yip(
+        rows,
+        MethodRunConfig(
+            method_id=4,
+            solver=solver,
+            direction=direction,
+            reinforcement=ReinforcementConfig(
+                enabled=True, steel_area=4e-4, yield_strength=200000.0, spacing_x=2.0, spacing_y=2.0
+            ),
+        ),
+    )
+    assert off.fs_min is not None and on.fs_min is not None
+    assert on.fs_min >= off.fs_min
 

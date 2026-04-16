@@ -19,10 +19,11 @@ const OUT_TABS = [
 ]
 
 export default function AppShell3D() {
-  const { validate, runSingle, runMulti, isRunning, isValidating, canRun } = useAnalysis3d()
+  const { validate, runSingle, runMulti, runCompare, isRunning, isValidating, canRun } = useAnalysis3d()
   const activeOutputTab = useUi3dStore((s) => s.activeOutputTab)
   const setActiveOutputTab = useUi3dStore((s) => s.setActiveOutputTab)
   const comparisonMode = useForm3dStore((s) => s.methodConfig.comparisonMode)
+  const reinforcementEnabled = useForm3dStore((s) => s.reinforcement.enabled)
   const serverErrors = useValidation3dStore((s) => s.serverErrors)
 
   return (
@@ -43,9 +44,16 @@ export default function AppShell3D() {
               {isRunning ? 'Running…' : 'Run Multi-Method'}
             </button>
           ) : (
-            <button type="button" className="run-btn" onClick={runSingle} disabled={!canRun || isRunning}>
-              {isRunning ? 'Running…' : 'Run 3D Analysis'}
-            </button>
+            <>
+              <button type="button" className="run-btn" onClick={runSingle} disabled={!canRun || isRunning}>
+                {isRunning ? 'Running…' : 'Run 3D Analysis'}
+              </button>
+              {reinforcementEnabled && (
+                <button type="button" className="action-btn" onClick={runCompare} disabled={!canRun || isRunning}>
+                  Compare with/without nails
+                </button>
+              )}
+            </>
           )}
         </div>
       </header>

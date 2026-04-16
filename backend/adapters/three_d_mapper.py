@@ -13,6 +13,7 @@ _models = importlib.import_module("3d_slope_stability.domain.models")
 
 DirectionSearchConfig = _method_options.DirectionSearchConfig
 MethodRunConfig = _method_options.MethodRunConfig
+ReinforcementConfig = _method_options.ReinforcementConfig
 SolverConfig = _method_options.SolverConfig
 GridConfig = _schema.GridConfig
 SlipSurfaceConfig = _schema.SlipSurfaceConfig
@@ -63,6 +64,18 @@ def build_pipeline_kwargs(payload: Analyze3DRequest) -> Dict[str, Any]:
                 user_direction_deg=payload.method_config.direction.user_direction_deg,
             ),
             use_side_resistance=payload.method_config.use_side_resistance,
+            reinforcement=ReinforcementConfig(
+                enabled=payload.reinforcement.enabled,
+                diameter=payload.reinforcement.diameter,
+                length_embed=payload.reinforcement.length_embed,
+                spacing_x=payload.reinforcement.spacing_x,
+                spacing_y=payload.reinforcement.spacing_y,
+                steel_area=payload.reinforcement.steel_area,
+                yield_strength=payload.reinforcement.yield_strength,
+                bond_strength=payload.reinforcement.bond_strength,
+                inclination_deg=payload.reinforcement.inclination_deg,
+                include_vertical_component=payload.reinforcement.include_vertical_component,
+            ),
         )
         grid_config = GridConfig(**payload.grid_config.model_dump())
         slip_surface_config = SlipSurfaceConfig(**payload.slip_surface_config.model_dump())

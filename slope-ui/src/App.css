@@ -118,6 +118,8 @@ body {
   display: flex;
   flex-direction: column;
   background-color: var(--panel-bg);
+  min-height: 0;
+  overflow: hidden;
 }
 
 .canvas-container {
@@ -315,10 +317,22 @@ body {
   display: flex;
   border-bottom: var(--border-heavy);
   background-color: #e0e0e0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  scrollbar-width: thin;
+}
+
+.tab-panel-3d {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
 }
 
 .tab {
-  flex: 1;
+  flex: 0 0 auto;
+  min-width: 82px;
   padding: 8px 4px;
   text-align: center;
   border-right: var(--border-light);
@@ -348,6 +362,7 @@ body {
 .tab-content {
   padding: 12px;
   flex-grow: 1;
+  min-height: 0;
   overflow-y: auto;
 }
 
@@ -522,4 +537,25 @@ body {
   border: var(--border-light);
   padding: 8px;
   background: #fff;
+}
+
+.assumption-banner {
+  border: var(--border-light);
+  background: #fff7e6;
+  color: #6c4a00;
+  padding: 8px;
+  margin-bottom: 8px;
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.fidelity-badge {
+  display: inline-block;
+  border: var(--border-light);
+  background: #fff7e6;
+  color: #6c4a00;
+  font-size: 10px;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  margin-top: 8px;
 }

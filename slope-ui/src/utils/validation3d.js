@@ -49,6 +49,19 @@ const materialSchema = z.object({
   params: z.record(z.string(), z.number()),
 })
 
+const reinforcementSchema = z.object({
+  enabled: z.boolean(),
+  diameter: z.number().positive(),
+  lengthEmbed: z.number().positive(),
+  spacingX: z.number().positive(),
+  spacingY: z.number().positive(),
+  steelArea: z.number().positive(),
+  yieldStrength: z.number().positive(),
+  bondStrength: z.number().positive(),
+  inclinationDeg: z.number().min(-90).max(90),
+  includeVerticalComponent: z.boolean(),
+})
+
 export const form3dSchema = z.object({
   methodConfig: methodSchema,
   gridConfig: gridSchema,
@@ -65,6 +78,7 @@ export const form3dSchema = z.object({
   materials: z.array(materialSchema).min(1),
   hydro: z.object({ waterLevelZ: z.number().nullable() }),
   advanced: z.object({ includeAnalysisRows: z.boolean() }),
+  reinforcement: reinforcementSchema,
 })
 
 function toPathString(pathParts) {
@@ -173,6 +187,18 @@ export function build3dPayload(state) {
     surface_types: null,
     interpolation_modes: null,
     water_level_z: state.hydro.waterLevelZ,
+    reinforcement: {
+      enabled: state.reinforcement.enabled,
+      diameter: state.reinforcement.diameter,
+      length_embed: state.reinforcement.lengthEmbed,
+      spacing_x: state.reinforcement.spacingX,
+      spacing_y: state.reinforcement.spacingY,
+      steel_area: state.reinforcement.steelArea,
+      yield_strength: state.reinforcement.yieldStrength,
+      bond_strength: state.reinforcement.bondStrength,
+      inclination_deg: state.reinforcement.inclinationDeg,
+      include_vertical_component: state.reinforcement.includeVerticalComponent,
+    },
     debug: {
       include_analysis_rows: state.advanced.includeAnalysisRows,
     },

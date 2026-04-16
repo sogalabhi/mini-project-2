@@ -3,6 +3,7 @@
 from .method_options import (
     DirectionSearchConfig,
     MethodRunConfig,
+    ReinforcementConfig,
     SolverConfig,
 )
 from .schema import GridConfig, InterpolationConfig, SlipSurfaceConfig
@@ -13,6 +14,7 @@ __all__ = [
     "SolverConfig",
     "DirectionSearchConfig",
     "MethodRunConfig",
+    "ReinforcementConfig",
     "GridConfig",
     "InterpolationConfig",
     "SlipSurfaceConfig",

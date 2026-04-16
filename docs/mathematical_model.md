@@ -33,6 +33,32 @@ It covers the currently implemented method families:
 - Driving term:
   - `D_i = W_i * sin(alpha_i) * alignment_i`
 
+## Phase-2 Reinforcement Term
+
+For enabled reinforcement, per-column additive resistance:
+
+- `T_y = A_s * f_y`
+- `T_bond = pi * d * L_embed * tau_bond`
+- `T_max = min(T_y, T_bond)`
+- `q_nail = T_max / (S_x * S_y)`
+- `R_nail_i = q_nail * A_b_i`
+
+Updated resisting term:
+
+- `R_i = c_i * A_i + N_eff_i * tan(phi_i) + R_nail_i`
+
+Optional vertical coupling (disabled by default):
+
+- `N_eff_i_adj = N_eff_i + R_nail_i * tan(theta_nail)`
+- then use `N_eff_i_adj` in place of `N_eff_i` for resistance.
+
+Units contract (backend internal expectations):
+
+- `d`, `L_embed`, `S_x`, `S_y`: meters
+- `A_s`: m^2
+- `f_y`, `tau_bond`: kN/m^2
+- `R_nail_i`: kN
+
 ## Hungr-Bishop (method 1)
 
 Iterative fixed-point structure:
@@ -105,4 +131,8 @@ Global result:
 - Some advanced method equations are represented by controlled approximations
   that preserve expected behavior and stability while enabling modular extension.
 - Full publication-grade equation parity can be tightened in later calibration phases.
+- Phase-2 reinforcement is direction-independent and distributed by column base area.
+- Full 3D azimuth/directionality and explicit nail-slip intersection are deferred.
+- Reinforcement-induced FS increase should be interpreted as a simplified model effect,
+  useful for comparison within this model mode rather than exact real-world prediction.
 

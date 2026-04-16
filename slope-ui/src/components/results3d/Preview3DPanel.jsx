@@ -8,6 +8,7 @@ import SceneControls3D from './SceneControls3D.jsx'
 
 export default function Preview3DPanel() {
   const formState = useForm3dStore((s) => s)
+  const reinforcementEnabled = useForm3dStore((s) => s.reinforcement.enabled)
   const resultState = useResults3dStore((s) => s)
   const selectedColumnId = useUi3dStore((s) => s.selectedColumnId)
   const [cameraResetToken, setCameraResetToken] = useState(0)
@@ -44,6 +45,7 @@ export default function Preview3DPanel() {
         onOverlayMode={(overlayMode) => setControls((s) => ({ ...s, overlayMode }))}
         onResetCamera={() => setCameraResetToken((v) => v + 1)}
         selectedColumnId={selectedColumnId}
+        reinforcementEnabled={reinforcementEnabled}
       />
       <div className="preview3d-canvas-wrap">
         <Scene3DCanvas model={model} controls={controls} cameraResetToken={cameraResetToken} />

@@ -4,6 +4,11 @@ from typing import List, Sequence
 from ..config.method_options import MethodRunConfig
 from ..domain.enums import MethodId
 from ..domain.models import AnalysisRow, DirectionResult, MethodComputationResult
+from ..strength.reinforcement import (
+    compute_reinforcement_contribution,
+    per_column_diagnostics,
+    reinforcement_diagnostics,
+)
 from .common import apply_damping, decompose_force_2d, has_converged, safe_divide
 from .direction_search import build_direction_candidates, estimate_initial_direction
 from .results import aggregate_method_result
@@ -17,6 +22,8 @@ def _evaluate_direction_fs(
     rows: Sequence[AnalysisRow],
     direction_rad: float,
     config: MethodRunConfig,
+    reinforcement_per_column: dict[int, float],
+    vertical_factor: float,
 ) -> DirectionResult:
     fs_prev = 1.5
     iterations = 0
@@ -38,6 +45,7 @@ def _evaluate_direction_fs(
                 math.cos(alpha),
                 math.tan(phi),
                 max(0.2, abs(math.cos(delta))),
+                reinforcement_per_column.get(s.column_id, 0.0),
             )
         )
 
@@ -47,11 +55,12 @@ def _evaluate_direction_fs(
         driving_sum = 0.0
         total_drive = 0.0
 
-        for weight, cohesion_term, normal_force, sin_alpha, cos_alpha, tan_phi, alignment in precomputed:
+        for weight, cohesion_term, normal_force, sin_alpha, cos_alpha, tan_phi, alignment, r_nail in precomputed:
             drive_i = weight * sin_alpha * alignment
+            normal_force_adj = normal_force + r_nail * vertical_factor
             m_alpha = cos_alpha + safe_divide(sin_alpha * tan_phi, fs_prev, 0.0)
             m_alpha = max(1e-9, m_alpha)
-            resist_i = (cohesion_term + normal_force * tan_phi) / m_alpha
+            resist_i = (cohesion_term + normal_force_adj * tan_phi + r_nail) / m_alpha
 
             driving_sum += drive_i
             resisting_sum += resist_i
@@ -108,8 +117,25 @@ def run_hungr_bishop(
 
     initial = estimate_initial_direction(rows)
     candidates = build_direction_candidates(initial, config.direction)
+    reinforcement = compute_reinforcement_contribution(rows, config.reinforcement)
     direction_results: List[DirectionResult] = [
-        _evaluate_direction_fs(rows, theta, config) for theta in candidates
+        _evaluate_direction_fs(
+            rows,
+            theta,
+            config,
+            reinforcement.per_column,
+            reinforcement.vertical_factor,
+        )
+        for theta in candidates
     ]
-    return aggregate_method_result(MethodId.HUNGR_BISHOP, direction_results)
+    result = aggregate_method_result(MethodId.HUNGR_BISHOP, direction_results)
+    result.diagnostics.update(
+        {
+            **reinforcement_diagnostics(reinforcement),
+            "reinforcement_columns": float(len(reinforcement.per_column)),
+        }
+    )
+    if config.reinforcement.enabled:
+        result.diagnostics["reinforcement_per_column"] = per_column_diagnostics(reinforcement)
+    return result
 

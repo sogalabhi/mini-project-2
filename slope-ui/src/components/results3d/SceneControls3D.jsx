@@ -5,6 +5,7 @@ export default function SceneControls3D({
   onResetCamera,
   onOverlayMode,
   selectedColumnId,
+  reinforcementEnabled,
 }) {
   return (
     <div className="scene-controls">
@@ -56,6 +57,11 @@ export default function SceneControls3D({
       <div className="results-comparison-meta">
         Selected from diagnostics: {selectedColumnId != null ? selectedColumnId : 'none'}
       </div>
+      {reinforcementEnabled && (
+        <div className="assumption-banner">
+          Reinforcement overlay uses a simplified approximation (phase2), not full direction-aware intersection.
+        </div>
+      )}
     </div>
   )
 }

@@ -3,12 +3,15 @@ import { useUi3dStore } from '../../store/ui3dStore.js'
 
 export default function Diagnostics3DPanel() {
   const result = useResults3dStore((s) => s.latestSingle)
+  const payload = useResults3dStore((s) => s.lastPayload)
   const loading = useResults3dStore((s) => s.loading)
   const selectedColumnId = useUi3dStore((s) => s.selectedColumnId)
   const setSelectedColumnId = useUi3dStore((s) => s.setSelectedColumnId)
 
   if (loading) return <div className="skeleton-panel">Loading diagnostics…</div>
   if (!result?.diagnostics) return <div className="results-comparison-empty">Diagnostics appear after analysis.</div>
+  const reinforcementEnabled = Boolean(payload?.reinforcement?.enabled)
+  const methodDiag = result.diagnostics.method ?? {}
 
   return (
     <div className="results-details">
@@ -27,6 +30,30 @@ export default function Diagnostics3DPanel() {
       </div>
       <div className="results-comparison-title">Pipeline diagnostics</div>
       <pre className="json-preview">{JSON.stringify(result.diagnostics.pipeline, null, 2)}</pre>
+      {reinforcementEnabled && (
+        <>
+          <div className="results-comparison-title">Reinforcement assumptions (phase2 simplified)</div>
+          <div className="results-comparison-meta">- direction-independent per-column addition</div>
+          <div className="results-comparison-meta">- optional vertical component coupling</div>
+          <div className="results-comparison-meta">- no explicit per-nail slip intersection</div>
+          <div className="results-comparison-meta">
+            Assumptions shown are a concise summary. See model docs for full details.
+          </div>
+          <pre className="json-preview">
+            {JSON.stringify(
+              {
+                t_y: methodDiag.t_y ?? null,
+                t_bond: methodDiag.t_bond ?? null,
+                t_max: methodDiag.t_max ?? null,
+                q_nail: methodDiag.q_nail ?? null,
+                total_added_resistance: methodDiag.total_added_resistance ?? null,
+              },
+              null,
+              2,
+            )}
+          </pre>
+        </>
+      )}
       <div className="results-comparison-title">Method diagnostics</div>
       <pre className="json-preview">{JSON.stringify(result.diagnostics.method, null, 2)}</pre>
     </div>

@@ -4,6 +4,11 @@ from typing import Dict, List, Sequence, Tuple
 from ..config.method_options import MethodRunConfig
 from ..domain.enums import MethodId
 from ..domain.models import AnalysisRow, DirectionResult, MethodComputationResult
+from ..strength.reinforcement import (
+    compute_reinforcement_contribution,
+    per_column_diagnostics,
+    reinforcement_diagnostics,
+)
 from .common import apply_damping, decompose_force_2d, has_converged, safe_divide
 from .direction_search import build_direction_candidates, estimate_initial_direction
 from .lambda_update import update_lambda_bidirectional
@@ -25,7 +30,7 @@ def _method_variant(method_id: int) -> str:
 
 
 def _compute_pair_terms(
-    precomputed_rows: Sequence[Tuple[float, float, float, float, float, float, float]],
+    precomputed_rows: Sequence[Tuple[float, float, float, float, float, float, float, float]],
     direction_rad: float,
     fs_prev: float,
     lambda_value: float,
@@ -39,9 +44,9 @@ def _compute_pair_terms(
     driving_moment = 0.0
     total_drive = 0.0
 
-    for weight, cohesion_term, normal_force, tan_phi, sin_alpha, cos_alpha, alignment in precomputed_rows:
+    for weight, cohesion_term, normal_force, tan_phi, sin_alpha, cos_alpha, alignment, r_nail in precomputed_rows:
         drive_i = weight * sin_alpha * alignment
-        force_resist_i = cohesion_term + normal_force * tan_phi + lambda_value * alignment * 0.1 * drive_i
+        force_resist_i = cohesion_term + normal_force * tan_phi + r_nail + lambda_value * alignment * 0.1 * drive_i
 
         # Moment-like pair uses a stabilized bishop-style denominator term.
         m_alpha = cos_alpha + safe_divide(sin_alpha * tan_phi, max(fs_prev, 1e-6), 0.0)
@@ -85,6 +90,8 @@ def _evaluate_direction(
     direction_rad: float,
     config: MethodRunConfig,
     method_id: int,
+    reinforcement_per_column: Dict[int, float],
+    vertical_factor: float,
 ) -> DirectionResult:
     variant = _method_variant(method_id)
     corrected_janbu = method_id == MethodId.CHENG_YIP_JANBU_CORRECTED.value
@@ -114,6 +121,7 @@ def _evaluate_direction(
                 math.sin(alpha),
                 math.cos(alpha),
                 max(0.2, abs(math.cos(delta))),
+                reinforcement_per_column.get(s.column_id, 0.0) * (1.0 + vertical_factor * max(0.0, math.sin(alpha))),
             )
         )
 
@@ -245,8 +253,17 @@ def run_cheng_yip(
 
     initial = estimate_initial_direction(rows)
     candidates = build_direction_candidates(initial, config.direction)
+    reinforcement = compute_reinforcement_contribution(rows, config.reinforcement)
     direction_results = [
-        _evaluate_direction(rows, theta, config, method_id=config.method_id) for theta in candidates
+        _evaluate_direction(
+            rows,
+            theta,
+            config,
+            method_id=config.method_id,
+            reinforcement_per_column=reinforcement.per_column,
+            vertical_factor=reinforcement.vertical_factor,
+        )
+        for theta in candidates
     ]
     result = aggregate_method_result(MethodId(config.method_id), direction_results)
     mismatch_abs = [
@@ -262,7 +279,11 @@ def run_cheng_yip(
             "avg_mismatch_abs": (
                 sum(mismatch_abs) / len(mismatch_abs) if mismatch_abs else None
             ),
+            **reinforcement_diagnostics(reinforcement),
+            "reinforcement_columns": float(len(reinforcement.per_column)),
         }
     )
+    if config.reinforcement.enabled:
+        result.diagnostics["reinforcement_per_column"] = per_column_diagnostics(reinforcement)
     return result
 

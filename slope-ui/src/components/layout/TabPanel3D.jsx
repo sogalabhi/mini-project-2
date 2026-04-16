@@ -24,7 +24,7 @@ export default function TabPanel3D() {
   const tabErrors = useValidation3dStore((s) => s.tabErrors)
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="tab-panel-3d">
       <div className="tabs-header">
         {TABS.map((tab) => {
           const isActive = active === tab.id

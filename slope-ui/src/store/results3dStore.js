@@ -4,13 +4,16 @@ export const useResults3dStore = create((set) => ({
   latestSingle: null,
   latestMulti: null,
   lastPayload: null,
+  compareSnapshot: null,
   loading: false,
   error: null,
   setLoading: (loading) => set({ loading }),
   setError: (error) => set({ error }),
-  setSingleResult: (latestSingle) => set({ latestSingle, error: null }),
+  setSingleResult: (latestSingle) => set({ latestSingle, compareSnapshot: null, error: null }),
   setMultiResult: (latestMulti) => set({ latestMulti, error: null }),
   setLastPayload: (lastPayload) => set({ lastPayload }),
-  clear: () => set({ latestSingle: null, latestMulti: null, lastPayload: null, error: null }),
+  setCompareSnapshot: (compareSnapshot) => set({ compareSnapshot }),
+  clear: () =>
+    set({ latestSingle: null, latestMulti: null, lastPayload: null, compareSnapshot: null, error: null }),
 }))
 

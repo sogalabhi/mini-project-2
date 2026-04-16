@@ -62,6 +62,18 @@ export const useForm3dStore = create((set) => ({
   materials: [defaultMaterial],
   hydro: { waterLevelZ: null },
   advanced: { includeAnalysisRows: false },
+  reinforcement: {
+    enabled: false,
+    diameter: 0.1,
+    lengthEmbed: 6,
+    spacingX: 1.5,
+    spacingY: 1.5,
+    steelArea: 0.0005,
+    yieldStrength: 500,
+    bondStrength: 120,
+    inclinationDeg: 10,
+    includeVerticalComponent: false,
+  },
 
   setMethodConfig: (patch) =>
     set((state) => ({ methodConfig: { ...state.methodConfig, ...patch } })),
@@ -81,6 +93,8 @@ export const useForm3dStore = create((set) => ({
     set((state) => ({ slipSurfaceConfig: { ...state.slipSurfaceConfig, ...patch } })),
   setHydro: (patch) => set((state) => ({ hydro: { ...state.hydro, ...patch } })),
   setAdvanced: (patch) => set((state) => ({ advanced: { ...state.advanced, ...patch } })),
+  setReinforcement: (patch) =>
+    set((state) => ({ reinforcement: { ...state.reinforcement, ...patch } })),
   setTopSurfaceMeta: (patch) =>
     set((state) => ({ surfaces: { topSurface: { ...state.surfaces.topSurface, ...patch } } })),
   addTopSurfacePoint: () =>

@@ -27,7 +27,20 @@ Top-level fields:
 - `top_surface` or `surface_paths/surface_types/interpolation_modes`
 - optional `user_slip_surface`
 - optional `water_level_z`
+- optional `reinforcement`
 - `debug.include_analysis_rows` (default false)
+
+Reinforcement object shape:
+
+- `enabled` (bool)
+- `diameter`
+- `length_embed`
+- `spacing_x`, `spacing_y`
+- `steel_area`
+- `yield_strength`
+- `bond_strength`
+- `inclination_deg`
+- `include_vertical_component`
 
 ## Analyze Response Shape
 
@@ -39,6 +52,8 @@ Top-level fields:
 - `direction_results[]`
 - `diagnostics.pipeline`
 - `diagnostics.method`
+- method diagnostics include reinforcement metrics when enabled:
+  - `t_y`, `t_bond`, `t_max`, `q_nail`, `total_added_resistance`
 - `generated_files[]`
 - optional `analysis_rows[]` when debug flag is enabled and within row limits
 
@@ -74,4 +89,6 @@ On payload too large (`413`):
   - 3D -> `POST /api/v1/3d/analyze`
 - Render stable fields first (`fs_min`, `critical_direction_rad`, `converged`, diagnostics summary).
 - Keep `analysis_rows` opt-in only; payload may be large.
+- Recommended reinforcement disclaimer string:
+  - "Simplified phase-2 uniform column-based reinforcement approximation; full direction-aware intersection is deferred."
 

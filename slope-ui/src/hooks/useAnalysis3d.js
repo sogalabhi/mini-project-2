@@ -18,6 +18,7 @@ export function useAnalysis3d() {
   const setSingleResult = useResults3dStore((s) => s.setSingleResult)
   const setMultiResult = useResults3dStore((s) => s.setMultiResult)
   const setLastPayload = useResults3dStore((s) => s.setLastPayload)
+  const setCompareSnapshot = useResults3dStore((s) => s.setCompareSnapshot)
   const methodCfg = useForm3dStore((s) => s.methodConfig)
 
   const validateAbortRef = useRef(null)
@@ -91,6 +92,57 @@ export function useAnalysis3d() {
     validate: () => validateMutation.mutate(),
     runSingle: () => analyzeMutation.mutate({ multi: false }),
     runMulti: () => analyzeMutation.mutate({ multi: true }),
+    runCompare: async () => {
+      const state = getFormState()
+      const local = validate3dForm(state)
+      setValidationState(local)
+      if (!local.isValid) {
+        throw new Error('Fix validation issues before running comparison.')
+      }
+      if (analyzeAbortRef.current) analyzeAbortRef.current.abort()
+      analyzeAbortRef.current = new AbortController()
+      setLoading(true)
+      setError(null)
+      try {
+        const basePayload = build3dPayload(state)
+        const withoutNailsPayload = {
+          ...basePayload,
+          reinforcement: {
+            ...basePayload.reinforcement,
+            enabled: false,
+          },
+        }
+        const withNailsPayload = {
+          ...basePayload,
+          reinforcement: {
+            ...basePayload.reinforcement,
+            enabled: true,
+          },
+        }
+        const [withoutNails, withNails] = await Promise.all([
+          analyze3dPayload(withoutNailsPayload, analyzeAbortRef.current.signal),
+          analyze3dPayload(withNailsPayload, analyzeAbortRef.current.signal),
+        ])
+        setSingleResult(withNails)
+        setLastPayload(withNailsPayload)
+        const baselineFs = Number(withoutNails?.fs_min)
+        const reinforcedFs = Number(withNails?.fs_min)
+        if (Number.isFinite(baselineFs) && Number.isFinite(reinforcedFs)) {
+          setCompareSnapshot({
+            baselineFs,
+            reinforcedFs,
+            deltaFs: reinforcedFs - baselineFs,
+          })
+        } else {
+          setCompareSnapshot(null)
+        }
+      } catch (error) {
+        setError(error.message)
+        throw error
+      } finally {
+        setLoading(false)
+      }
+    },
     isValidating: validateMutation.isPending,
     isRunning: analyzeMutation.isPending,
     canRun: validate3dForm(getFormState()).isValid && !analyzeMutation.isPending,

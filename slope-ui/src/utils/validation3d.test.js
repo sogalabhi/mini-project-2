@@ -33,6 +33,18 @@ const validState = {
   materials: [{ key: 'default', name: 'default', modelType: 1, unitWeight: 18, params: { phi: 30, cohesion: 5 } }],
   hydro: { waterLevelZ: null },
   advanced: { includeAnalysisRows: false },
+  reinforcement: {
+    enabled: false,
+    diameter: 0.1,
+    lengthEmbed: 6,
+    spacingX: 1.5,
+    spacingY: 1.5,
+    steelArea: 0.0005,
+    yieldStrength: 500,
+    bondStrength: 120,
+    inclinationDeg: 10,
+    includeVerticalComponent: false,
+  },
 }
 
 test('validate3dForm succeeds for valid state', () => {
@@ -55,5 +67,6 @@ test('build3dPayload maps keys correctly', () => {
   assert.equal(payload.grid_config.col_x_max, 8)
   assert.equal(payload.top_surface.interpolation_mode, 'a1')
   assert.deepEqual(payload.materials.default.model_parameters, [30, 5])
+  assert.equal(payload.reinforcement.enabled, false)
 })
 

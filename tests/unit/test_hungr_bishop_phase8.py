@@ -8,6 +8,9 @@ SolverConfig = importlib.import_module("3d_slope_stability.config.method_options
 DirectionSearchConfig = importlib.import_module(
     "3d_slope_stability.config.method_options"
 ).DirectionSearchConfig
+ReinforcementConfig = importlib.import_module(
+    "3d_slope_stability.config.method_options"
+).ReinforcementConfig
 models = importlib.import_module("3d_slope_stability.domain.models")
 AnalysisRow = models.AnalysisRow
 ColumnState = models.ColumnState
@@ -66,4 +69,32 @@ def test_hungr_bishop_trend_higher_cohesion_higher_fs() -> None:
     high = run_hungr_bishop(high_rows, config)
     assert low.fs_min is not None and high.fs_min is not None
     assert high.fs_min > low.fs_min
+
+
+def test_hungr_bishop_reinforcement_monotonic_and_disabled_equivalence() -> None:
+    rows = [_row(1, 8.0), _row(2, 8.0), _row(3, 8.0)]
+    cfg_off = MethodRunConfig(
+        method_id=1,
+        solver=SolverConfig(max_iterations=100, tol_fs=1e-4, damping=1.0),
+        direction=DirectionSearchConfig(spacing_deg=2.0, tolerance_deg=0.0),
+        reinforcement=ReinforcementConfig(enabled=False),
+    )
+    cfg_on_light = MethodRunConfig(
+        method_id=1,
+        solver=cfg_off.solver,
+        direction=cfg_off.direction,
+        reinforcement=ReinforcementConfig(enabled=True, steel_area=4e-4, yield_strength=200000.0, spacing_x=2.0, spacing_y=2.0),
+    )
+    cfg_on_dense = MethodRunConfig(
+        method_id=1,
+        solver=cfg_off.solver,
+        direction=cfg_off.direction,
+        reinforcement=ReinforcementConfig(enabled=True, steel_area=4e-4, yield_strength=200000.0, spacing_x=1.0, spacing_y=1.0),
+    )
+    off = run_hungr_bishop(rows, cfg_off)
+    light = run_hungr_bishop(rows, cfg_on_light)
+    dense = run_hungr_bishop(rows, cfg_on_dense)
+    assert off.fs_min is not None and light.fs_min is not None and dense.fs_min is not None
+    assert light.fs_min >= off.fs_min
+    assert dense.fs_min >= light.fs_min
 

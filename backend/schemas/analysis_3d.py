@@ -42,6 +42,19 @@ class MethodRunConfigInput(BaseModel):
     use_side_resistance: bool = True
 
 
+class ReinforcementInput(BaseModel):
+    enabled: bool = False
+    diameter: float = Field(0.025, gt=0.0)
+    length_embed: float = Field(6.0, gt=0.0)
+    spacing_x: float = Field(2.0, gt=0.0)
+    spacing_y: float = Field(2.0, gt=0.0)
+    steel_area: float = Field(5e-4, gt=0.0)
+    yield_strength: float = Field(500000.0, gt=0.0)
+    bond_strength: float = Field(150.0, gt=0.0)
+    inclination_deg: float = Field(0.0, ge=-90.0, le=90.0)
+    include_vertical_component: bool = False
+
+
 class GridConfigInput(BaseModel):
     x_min: float
     x_max: float
@@ -127,6 +140,7 @@ class Analyze3DRequest(BaseModel):
     surface_types: Optional[List[str]] = None
     interpolation_modes: Optional[List[str]] = None
     water_level_z: Optional[float] = None
+    reinforcement: ReinforcementInput = Field(default_factory=ReinforcementInput)
     debug: DebugOptionsInput = Field(default_factory=DebugOptionsInput)
 
 

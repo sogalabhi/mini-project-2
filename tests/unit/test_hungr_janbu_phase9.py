@@ -8,6 +8,9 @@ SolverConfig = importlib.import_module("3d_slope_stability.config.method_options
 DirectionSearchConfig = importlib.import_module(
     "3d_slope_stability.config.method_options"
 ).DirectionSearchConfig
+ReinforcementConfig = importlib.import_module(
+    "3d_slope_stability.config.method_options"
+).ReinforcementConfig
 models = importlib.import_module("3d_slope_stability.domain.models")
 AnalysisRow = models.AnalysisRow
 ColumnState = models.ColumnState
@@ -88,4 +91,24 @@ def test_janbu_interface_matches_bishop_style_result_shape() -> None:
     assert hasattr(result, "critical_direction_rad")
     assert hasattr(result, "direction_results")
     assert isinstance(result.direction_results, list)
+
+
+def test_janbu_reinforcement_monotonic_vs_spacing() -> None:
+    rows = [_row(1, 6.0), _row(2, 6.0), _row(3, 6.0)]
+    cfg_sparse = MethodRunConfig(
+        method_id=2,
+        solver=SolverConfig(max_iterations=100, tol_fs=1e-4, damping=1.0),
+        direction=DirectionSearchConfig(spacing_deg=2.0, tolerance_deg=0.0),
+        reinforcement=ReinforcementConfig(enabled=True, steel_area=4e-4, yield_strength=200000.0, spacing_x=3.0, spacing_y=3.0),
+    )
+    cfg_dense = MethodRunConfig(
+        method_id=2,
+        solver=cfg_sparse.solver,
+        direction=cfg_sparse.direction,
+        reinforcement=ReinforcementConfig(enabled=True, steel_area=4e-4, yield_strength=200000.0, spacing_x=1.5, spacing_y=1.5),
+    )
+    sparse = run_hungr_janbu_simplified(rows, cfg_sparse)
+    dense = run_hungr_janbu_simplified(rows, cfg_dense)
+    assert sparse.fs_min is not None and dense.fs_min is not None
+    assert dense.fs_min >= sparse.fs_min
 
