@@ -1,6 +1,15 @@
 import { useForm3dStore } from '../../store/form3dStore.js'
 
 const ALL_METHODS = [1, 2, 3, 4, 5, 6, 7]
+const METHOD_LABELS = {
+  1: 'Hungr-Bishop',
+  2: 'Hungr-Janbu Simplified',
+  3: 'Hungr-Janbu Corrected',
+  4: 'Cheng-Yip Bishop-like',
+  5: 'Cheng-Yip Janbu-like',
+  6: 'Cheng-Yip Janbu-like Corrected',
+  7: 'Cheng-Yip Spencer-like',
+}
 
 export default function Method3DPanel() {
   const methodConfig = useForm3dStore((s) => s.methodConfig)
@@ -48,7 +57,7 @@ export default function Method3DPanel() {
                     setMethodConfig({ comparisonMethodIds: next.length ? next : [methodConfig.methodId] })
                   }}
                 />
-                M{id}
+                {METHOD_LABELS[id] ?? `Method ${id}`}
               </label>
             )
           })}
