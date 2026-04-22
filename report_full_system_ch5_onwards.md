@@ -541,18 +541,18 @@ The increment reflects the **additive resisting contribution** in §5.5. The exa
 
 The following **six** figures are intended to support Chapter 6 in the final PDF or Word document. In each case, **delete the placeholder line** and **insert your exported image** (PNG or high-resolution JPEG). Keep the **figure number** and **caption** immediately below the image so cross-references stay clear.
 
-> **Layout tip:** In Word, use *Insert → Picture* on the placeholder row; in LaTeX, replace each placeholder with `\includegraphics[width=\textwidth]{...}` and keep `\caption{...}` matching the text below.
+**3D workflow (Figures 4–5):** The **Preview** tab does **not** show a meaningful meshed scene **before** a successful analysis—geometry overlays depend on returned **render** data. Use the **same §6.2 model** on the right-hand inputs, run **Run Multi-Method** (comparison on), then capture **Comparison** (Fig. 4) and switch to **Preview** (Fig. 5) with **terrain mesh**, **slip surface**, and other meshes/layers enabled in scene controls.
 
 | Fig. | What to capture | Suggested state before capture |
 |------|-----------------|-------------------------------|
 | **1** | 2D — **Visualizer** (left) + **Geometry** tab (right) | Same inputs as §6.1 (or very close). Run not required; clean canvas. |
 | **2** | 2D — left **Results** (numeric FS, Bishop vs Fellenius) | After a successful **Run Analysis** for the §6.1 case. |
 | **3** | 2D — left **Image** (server-generated diagram) | After run, when the tab is enabled. Omit only if the build never returns an image. |
-| **4** | 3D — left **Comparison** tab (multi-method FS table) | Enable **comparison** mode on the right **Method** tab, select the methods in §6.2.2, then **Run Multi-Method** so the table matches the case study. |
-| **5** | 3D — **Preview** (scene: terrain, slip, optional heatmap/controls) | Same §6.2 model as Fig. 4 (same inputs); enable layers as needed for a clear “3D result” view. |
+| **4** | 3D — left **Comparison** tab (multi-method FS table) | After **Run Multi-Method** completes: comparison mode on, methods selected as in §6.2.2, inputs matching the §6.2 case study. |
+| **5** | 3D — left **Preview** (meshed terrain, slip mesh, optional prisms / heatmap / scene controls) | **After** the same successful multi-method run as Fig. 4 (same inputs); open **Preview**, ensure **include render geometry** was on for the run, then enable **terrain mesh**, **slip mesh**, and any column/prism/heatmap layers you want visible. |
 | **6** | 2D — right tab **Results** (soil-nail **design** inputs: target FOS, steel, bond) | Matches §6.1.3 settings; shows reinforcement panel, not the left output tab. |
 
-**Note for Figure 4:** The **Comparison** tab is populated only after **Run Multi-Method** with **comparison** mode enabled and several methods ticked (as for §6.2.2). A single-method **Run 3D Analysis** leaves nothing meaningful to show there—use the checklist above for this figure.
+**Note for Figure 4:** The **Comparison** tab is populated only after **Run Multi-Method** with **comparison** mode enabled and several methods ticked (as for §6.2.2). A single-method **Run 3D Analysis** leaves nothing meaningful to show there.
 
 ---
 
@@ -576,13 +576,13 @@ The following **six** figures are intended to support Chapter 6 in the final PDF
 
 **[Insert image here — Figure 4]**
 
-**Figure 4.** Three-dimensional web client: left **Comparison** tab after **Run Multi-Method** — factor of safety **by method** for the §6.2 configuration (aligns with the unreinforced seven-method table in §6.2.2; more informative than a single-line Summary for this chapter).
+**Figure 4.** Three-dimensional web client: left **Comparison** tab **after** **Run Multi-Method** completes — factor of safety **by method** for the §6.2 configuration (aligns with the unreinforced seven-method table in §6.2.2). Capture this before switching to **Preview** for Figure 5, or revisit the tab after the run; both figures use the **same analysis case**.
 
 ---
 
 **[Insert image here — Figure 5]**
 
-**Figure 5.** Three-dimensional web client: **Preview** — interactive scene showing **terrain mesh** (or points), **slip surface**, and optional **per-column scalar / heatmap** and scene controls, for the **same §6.2 inputs** as Figure 4.
+**Figure 5.** Three-dimensional web client: **Preview** tab **after** a completed 3D analysis (**not** available as a full meshed visualization beforehand). Scene with **meshed terrain**, **meshed slip surface**, and optional **column prisms**, **column lines/centers**, **morphology**, and **FS heatmap** / scene controls enabled — **same §6.2 model and run** as Figure 4 (multi-method), with **render geometry** included in the request so meshes can draw.
 
 ---
 
