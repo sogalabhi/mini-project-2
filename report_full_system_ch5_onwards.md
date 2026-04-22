@@ -133,6 +133,7 @@ This removes search-population bias and isolates method-equation differences.
 ## 5.3.5 Meaning of `num_iterations = 2000`
 
 In this system, `num_iterations` refers to candidate slip-surface generation attempts (circle-search budget), not one single nonlinear loop for one equation.
+This is different from solver-side iterative convergence used inside methods (for example Bishop-style fixed-point updates).
 
 So with `2000`:
 
@@ -154,19 +155,51 @@ This output is decision-support guidance, not a full structural detailing module
 
 ## 5.4 3D Methodology (7 Implemented Methods)
 
-## 5.4.1 Method Set
+### 5.4.0 Implementation Origin and Adaptation Note
 
-Implemented 3D method IDs:
+The 3D methodology in this project was developed with technical inspiration from the legacy open-source repository:
 
-1. Hungr-Bishop  
-2. Hungr-Janbu Simplified  
-3. Hungr-Janbu Corrected  
-4. Cheng-Yip Bishop-like  
-5. Cheng-Yip Janbu-like  
-6. Cheng-Yip Janbu-like Corrected  
-7. Cheng-Yip Spencer-like
+- [https://github.com/enokjun/2D-and-3D-LEM-Slope-Analysis-Python3/blob/master/3D_backend_analysis.py](https://github.com/enokjun/2D-and-3D-LEM-Slope-Analysis-Python3/blob/master/3D_backend_analysis.py)
 
-## 5.4.2 3D Preprocessing Pipeline
+That codebase is from an older software ecosystem (approximately 8 years old), and direct reuse was not practical because of major changes in:
+
+- Python runtime behavior and language ecosystem,
+- package/dependency versions and compatibility,
+- modern project structure, testing, and integration requirements.
+
+Therefore, this project does **not** directly copy the old implementation.  
+Instead, the team used the legacy repository as conceptual/methodological reference and implemented a new 3D analysis system compatible with the current environment.
+
+## 5.4.1 Method Selection Guide (Engineering Context)
+
+The implemented 3D methods span simplified to strongly coupled equilibrium formulations.
+Method selection is a trade-off between computational speed, numerical robustness, and equilibrium rigor.
+
+| Method ID | Method | Classification | Best Used For | Practical Note |
+|---|---|---|---|---|
+| 1 | Hungr-Bishop | Moment-oriented | Initial 3D rotational screening | Stable and fast baseline |
+| 2 | Hungr-Janbu Simplified | Force-oriented | Translational / planar tendencies | Conservative tendency in many cases |
+| 3 | Hungr-Janbu Corrected | Force + correction | Non-circular/transitional failures | Uses correction factor to reduce simplified bias |
+| 4 | Cheng-Yip Bishop-like | Moment-dominant | Curved 3D geometries | Enhanced geometric handling vs basic baseline |
+| 5 | Cheng-Yip Janbu-like | Force-dominant | Irregular/deep-seated non-circular trends | Useful for force-dominant scenarios |
+| 6 | Cheng-Yip Janbu-like Corrected | Force + correction | Refined non-circular design checks | Correction in Cheng-Yip framework |
+| 7 | Cheng-Yip Spencer-like | Coupled force+moment | Final critical verification | Most coupled and computationally sensitive in current set |
+
+## 5.4.2 Family-Level Rationale
+
+### Hungr Suite (Methods 1–3)
+
+- Intended for rapid global screening and optimization loops.
+- Lower computational overhead than highly coupled alternatives.
+- Well suited for identifying critical zones and candidate mechanisms before final verification.
+
+### Cheng-Yip Suite (Methods 4–7)
+
+- Better suited to complex 3D geometry and richer inter-column behavior assumptions.
+- Preferred where slope shape/material variation is irregular or highly non-uniform.
+- Method 7 (Spencer-like) is best used as a final verification step.
+
+## 5.4.3 3D Preprocessing Pipeline
 
 1. Parse and validate surface/slip/material/hydro definitions.
 2. Build grid and active columns.
@@ -182,7 +215,7 @@ Per-column canonical fields include:
 - dip and dip-direction proxies,
 - effective stress terms.
 
-## 5.4.3 Shared 3D Force Terms
+## 5.4.4 Shared 3D Force Terms
 
 For each column $i$:
 
@@ -205,7 +238,7 @@ where:
 
 Global method result is selected from direction-wise solutions (minimum converged FS).
 
-## 5.4.4 Method 1: Hungr-Bishop
+## 5.4.5 Method 1: Hungr-Bishop
 
 Direction-wise fixed-point iteration:
 
@@ -225,7 +258,12 @@ $$
 FS = \frac{\sum_i R_i}{\sum_i D_i}
 $$
 
-## 5.4.6 Method 3: Hungr-Janbu Corrected
+Engineering context:
+
+- Fast and useful for translational trends.
+- Can show conservative tendency compared to corrected/coupled methods.
+
+## 5.4.7 Method 3: Hungr-Janbu Corrected
 
 $$
 FS_{corr} = FS_{simp}\cdot C_j
@@ -237,7 +275,12 @@ $$
 C_j = 1 + 0.08\sin(\overline{dip}) + 0.05\tan(\overline{\phi}), \quad C_j \in [1.0,1.35]
 $$
 
-## 5.4.7 Methods 4-7: Cheng-Yip Family
+where:
+
+- $\overline{dip}$ is the area-weighted average base dip over the active slip mass,
+- $\overline{\phi}$ is the area-weighted average friction angle over the same active slip mass.
+
+## 5.4.8 Methods 4-7: Cheng-Yip Family
 
 Unified framework tracks:
 
@@ -259,7 +302,7 @@ $$
 
 lambda is iteratively updated with bounds, step-control, and oscillation checks.
 
-## 5.4.8 Direction Search and Selection
+## 5.4.9 Direction Search and Selection
 
 For each candidate direction:
 
@@ -268,6 +311,45 @@ For each candidate direction:
 3. Store diagnostics and FS.
 
 Final FS is the minimum converged direction result.
+
+## 5.4.10 Method-Specific Limitations
+
+### Method 1: Hungr-Bishop
+
+- Partial equilibrium formulation; may be less reliable for strongly translational mechanisms.
+- Best interpreted for rotational-like behavior.
+
+### Method 2: Hungr-Janbu Simplified
+
+- May be conservative due to simplified force treatment.
+- Useful for screening, not always ideal as sole final-design basis.
+
+### Method 3: Hungr-Janbu Corrected
+
+- Correction is model-form dependent and not universally exact.
+- Improves simplified behavior but remains approximation-based.
+
+### Methods 4-5: Cheng-Yip Bishop-like / Janbu-like
+
+- Improved 3D handling but still branch-dependent (moment- or force-dominant assumptions).
+- Convergence can degrade in highly irregular geometries.
+
+### Method 6: Cheng-Yip Janbu-like Corrected
+
+- Adds refinement over Method 5 but retains correction-model dependence.
+- Should be cross-checked against Method 7 in critical cases.
+
+### Method 7: Cheng-Yip Spencer-like
+
+- Most coupled in the implemented method set.
+- Higher computational demand and greater non-convergence sensitivity on difficult geometries.
+
+## 5.4.11 General 3D LEM Limits (Current System)
+
+- Column-based LEM assumes rigid-body style failure mass behavior.
+- Internal deformation modes are not explicitly modeled.
+- Results are sensitive to direction-search resolution and grid discretization.
+- Side-boundary effects can inflate FS in narrow domains; 2D sanity checks are recommended.
 
 ---
 
@@ -298,6 +380,7 @@ Important interpretation:
 
 - This is a simplified engineering approximation in current phase,
 - full explicit direction-aware nail-slip geometric intersection is deferred.
+- reinforcement-induced FS gains should be interpreted as model-relative guidance in the current phase.
 
 ---
 
@@ -325,6 +408,9 @@ The visualization workflow uses optional render data including:
 - prism view (with performance cap fallback),
 - scalar heatmap,
 - morphology overlay.
+
+In practice, the scalar heatmap is used to show local safety-related indicators
+(for example local FS proxies or local resisting-force intensity), helping identify potential weak zones in the 3D mass.
 
 ## 5.6.4 Performance Controls
 

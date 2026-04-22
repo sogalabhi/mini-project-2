@@ -1,0 +1,289 @@
+INTEGRATED COMPUTATIONAL TOOL 
+FOR SLOP STABILITY  
+Mini Project –II (CV381) Report 
+submitted in partial fulfilment of the requirement for the degree of 
+BACHELOR OF TECHNOLOGY 
+in 
+Civil Engineering 
+by 
+ABHIJITH SOGAL (231CV203) 
+PRIYAL NEEKHRA (231CV239) 
+VIDYA S.J (231CV155) 
+
+DEPARTMENT OF CIVIL ENGINEERING 
+NATIONAL INSTITUTE OF TECHNOLOGY KARNATAKA MANGALORE -575 025 
+NOVEMBER 2025 
+
+
+INTEGRATED COMPUTATIONAL TOOL 
+FOR SLOP STABILITY  
+
+submitted in partial fulfilment of the requirement for the degree of 
+BACHELOR OF TECHNOLOGY 
+in 
+Civil Engineering 
+by 
+ABHIJITH SOGAL (231CV203) 
+PRIYAL NEEKHRA (231CV239) 
+VIDYA S.J (231CV155) 
+under the guidance of 
+Dr. Babloo Chaudhary 
+
+DEPARTMENT OF CIVIL ENGINEERING 
+NATIONAL INSTITUTE OF TECHNOLOGY KARNATAKA MANGALORE -575 025 
+NOVEMBER 2025 
+ii
+DECLARATION 
+by the B.Tech. Student 
+We hereby declare that the Project Work Report entitled “INTEGRATED COMPUTATIONAL TOOL FOR SLOP STABILITY” which is being submitted to the National Institute of Technology Karnataka, Surathkal for the award of the Degree of Bachelor of Technology in Civil Engineering is a bonafide report of the work carried out by us. The material contained in this Project Work Report has not been submitted to any University or Institution for the award of any degree. 
+Register Number, Name & Signature of the Students: 
+(1)Abhijith Sogal (231CV203) 
+(2)Priyal Neekhra (231CV239) 
+(3)Vidya S.J (231CV155) 
+Department of Civil Engineering 
+National Institute of Technology Karnataka, Surathkal 
+Place: NITK, SURATHKAL 
+Date:
+
+
+
+
+CERTIFICATE 
+This is to certify that this report entitled “INTEGRATED COMPUTATIONAL TOOL FOR SLOP STABILITY”, submitted by 
+(1)Abhijith Sogal (231CV203) 
+(2)Priyal Neekhra (231CV239) 
+(3)Vidya S.J (231CV155) 
+as the record of the work carried out by them in the Department of Civil Engineering, is  accepted as the B.Tech Mini Project –II Report (CV381) submission in partial fulfilment of the requirement for the award of the degree of Bachelor of Technology in Civil Engineering. 
+Dr. Babloo Chaudhary 
+Assistant Professor & Guide 
+Department of Civil Engineering 
+National Institute of Technology Karnataka, Surathkal. 
+Chairman- DUGC 
+Department of Civil Engineering 
+National Institute of Technology Karnataka, Surathkal.
+
+
+
+
+
+
+ACKNOWLEDGEMENT 
+We take this opportunity to express our sincere gratitude and profound thanks to our guide  Dr. Babloo Chaudhary, Assistant Professor, Department of Civil Engineering, National  Institute of Technology Karnataka, Surathkal for his help, encouragement, advice and  valuable guidance during the course of the research work. 
+We would like to express our sincere gratitude to Dr. Basavaraju Manu, Professor and Head  of the department, Department of Civil Engineering, National Institute of Technology  Karnataka, Surathkal, for the support and encouragement through this project work. 
+I am also deeply indebted to the faculty and staff of the Department of Civil Engineering.  The strong foundational knowledge imparted through the curriculum provided the  necessary groundwork for undertaking this endeavour. Special thanks are due to the authors and researchers cited in this report, whose pioneering work in soil mechanics and  foundation engineering formed the theoretical cornerstone for the computational tools  developed. 
+My sincere thanks go to my colleagues and friends for their camaraderie, stimulating  discussions, and moral support. The collaborative environment and their willingness to share knowledge were a constant source of motivation.Finally, and most importantly, I owe a debt of gratitude that words cannot fully capture to my family. To my parents, for their  unconditional love, unwavering belief, and countless sacrifices that have brought me to this  stage. Their constant encouragement and support have been my greatest strength. This  achievement is as much theirs as it is mine. 
+While this list is not exhaustive, the contribution of every individual, named or unnamed, is  gratefully acknowledged. Any omissions are deeply regretted. The responsibility for any  errors or shortcomings in this work rests solely with me. 
+v
+
+
+CHAPTER 1: INTRODUCTION
+1.1 Introduction
+Slope Stability Analysis is a fundamental concept in geotechnical engineering that deals with the assessment of the stability of natural and man-made slopes. Slopes are commonly found in infrastructure projects such as highways, railways, dams, embankments, and open-pit mines. The stability of these slopes is critical because any failure can lead to severe consequences, including loss of human life, economic damage, and environmental degradation.
+In engineering practice, slopes are subjected to various forces such as gravity, water pressure, and external loads. These forces may cause the soil or rock mass to move downward along a potential failure surface. Therefore, it becomes essential to analyze whether a slope will remain stable under given conditions or if it is prone to failure.
+This project focuses on developing a computational tool that performs slope stability analysis using engineering principles and mathematical models. The tool is designed to simplify complex calculations and provide accurate results efficiently. It serves as a practical application of theoretical concepts in soil mechanics and helps users understand slope behavior in real-world scenarios.
+
+1.2 What the Project is About
+The project is centered around the design and development of a software-based system that evaluates slope stability. It integrates a user-friendly interface with a computational backend to perform engineering calculations. The primary aim of the system is to calculate the Factor of Safety (FoS), which indicates whether a slope is stable or not.
+The application allows users to input various parameters such as soil properties, slope geometry, and environmental conditions. Based on these inputs, the system applies mathematical formulas and engineering logic to determine the stability of the slope.
+Unlike traditional manual methods, this tool automates the entire process, reducing the chances of calculation errors and saving time. It is especially useful for students, researchers, and engineers who need a quick and reliable way to analyze slope conditions.
+
+1.3 Why it is Needed
+Slope stability analysis is crucial in civil engineering because slope failures can have devastating impacts. Landslides and slope collapses can destroy infrastructure such as roads, bridges, and buildings, and may also result in casualties. In regions with heavy rainfall or seismic activity, the risk of slope failure increases significantly.
+Traditionally, slope stability calculations are performed manually using complex equations and iterative methods. These calculations are not only time-consuming but also require a high level of expertise. Human errors in such calculations can lead to incorrect conclusions, which may compromise safety.
+The need for this project arises from the requirement to:
+Simplify the analysis process
+Reduce dependency on manual calculations
+Improve accuracy and efficiency
+Provide quick and reliable results
+By developing an automated system, engineers can make better decisions in less time, thereby improving safety and productivity in construction projects.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+CHAPTER 2: PROBLEM STATEMENT AND OBJECTIVES
+2.1 Problem Statement
+In geotechnical engineering, evaluating the stability of slopes is a complex task that involves multiple variables such as soil properties, slope angle, water conditions, and external loads. Traditional methods require detailed calculations and assumptions, making the process time-intensive and prone to errors.
+Moreover, advanced commercial software used for slope stability analysis is often expensive and requires specialized training. This creates a barrier for students and small-scale projects where access to such tools may be limited.
+Therefore, there is a need for a simple, cost-effective, and efficient system that can perform slope stability analysis accurately while being easy to use. The problem addressed in this project is the development of such a system that bridges the gap between theoretical knowledge and practical application.
+
+2.2 Objectives of the Project
+The primary objective of this project is to develop a reliable and user-friendly tool for slope stability analysis. The system aims to simplify complex engineering calculations and make them accessible to a wider audience.
+One of the key objectives is to accurately calculate the Factor of Safety using input parameters such as cohesion, angle of internal friction, and slope geometry. The project also focuses on creating an intuitive interface that allows users to easily input data and interpret results.
+Another important objective is to minimize human errors by automating the calculation process. By doing so, the system enhances the reliability of the results and supports better decision-making.
+Additionally, the project aims to provide a platform for learning and understanding slope stability concepts. It can be used as an educational tool for students to visualize how different parameters affect slope stability.
+
+
+
+CHAPTER 3: LITERATURE REVIEW / RELATED WORK
+3.1 Literature Review
+Slope stability analysis has been an important area of study in geotechnical engineering for many decades. Various researchers and engineers have developed methods to evaluate slope stability based on different assumptions and approaches.
+One of the earliest methods is the Limit Equilibrium Method (LEM), which is widely used due to its simplicity and effectiveness. This method involves analyzing the balance of forces acting on a potential failure surface. It assumes that the slope is on the verge of failure and calculates the Factor of Safety accordingly.
+Another important method is the Fellenius Method, also known as the Ordinary Method of Slices. In this method, the slope is divided into several vertical slices, and the equilibrium of each slice is analyzed. Although it is simple to apply, it does not consider inter-slice forces, which may affect accuracy.
+The Bishop’s Simplified Method improves upon the Fellenius method by considering inter-slice forces, resulting in more accurate results. It is commonly used in practical engineering applications.
+Advanced methods such as the Finite Element Method (FEM) use numerical techniques to model soil behavior more precisely. These methods can handle complex conditions but require significant computational resources and expertise.
+
+3.2 Related Work
+Several commercial software tools have been developed for slope stability analysis, including GeoStudio, PLAXIS, and SLOPE/W. These tools provide advanced features such as graphical visualization, multiple analysis methods, and simulation capabilities.
+However, these tools are often expensive and may not be accessible to all users. Additionally, they can be complex and require training to operate effectively.
+The project presented here aims to provide a simplified alternative that retains the core functionality of slope stability analysis while being easy to use and cost-effective. It focuses on fundamental concepts and provides accurate results without the complexity of advanced software.
+
+CHAPTER 4: BASIC THEORY AND BACKGROUND
+4.1 Basic Theory Used
+The stability of a slope depends on the balance between forces acting on it. These forces can be broadly classified into driving forces and resisting forces. Driving forces tend to move the soil mass downward, while resisting forces oppose this movement.
+The ratio of resisting forces to driving forces is known as the Factor of Safety. This parameter is used to determine whether a slope is stable or not.
+
+4.2 Concepts
+The Factor of Safety is a crucial parameter in slope stability analysis. It provides a measure of how close a slope is to failure. A value greater than one indicates that the resisting forces are greater than the driving forces, meaning the slope is stable. A value less than one indicates potential failure.
+Another important concept is shear strength, which represents the ability of soil to resist sliding along a surface. Shear strength depends on cohesion and internal friction.
+The slip surface is the surface along which the soil mass moves during failure. Identifying this surface is essential for accurate analysis.
+
+4.3 Formulas
+The Factor of Safety is calculated as:
+FoS=Driving Forces/Resisting Forces​ 
+This formula represents the ratio of forces that resist movement to those that cause movement. A higher value indicates a more stable slope.
+Another important equation is the shear strength equation:
+τ=c+σtanϕ 
+Where:
+τ  = Shear strength
+c = Cohesion
+σ  = Normal stress
+ϕ  = Angle of internal friction
+
+This equation shows that shear strength depends on cohesion, normal stress, and the angle of internal friction.
+
+4.4 Definitions
+Cohesion refers to the internal bonding between soil particles that holds them together. It is especially significant in clayey soils.
+The angle of internal friction represents the resistance offered by soil particles due to friction. It is more significant in sandy soils.
+Normal stress is the force acting perpendicular to a surface, while shear stress acts parallel to the surface.
+
+4.5 Background Information
+Slope stability analysis plays a vital role in various engineering projects. In highway construction, it ensures that road embankments remain stable. In dam construction, it prevents catastrophic failures. In mining, it helps maintain safe excavation slopes.
+Slope failures can occur due to several factors, including heavy rainfall, which increases pore water pressure, earthquakes that induce vibrations, and poor soil conditions that reduce strength. Understanding these factors is essential for designing safe slopes.
+
+
+
+
+
+
+CHAPTER 5: METHODOLOGY
+5.1 Methodology Overview
+The methodology adopted in this project focuses on evaluating slope stability using analytical methods based on geotechnical engineering principles. The system calculates the Factor of Safety (FoS) by applying established slope stability methods to the given soil and slope parameters.
+Two widely used methods are considered in this project:
+Ordinary Method of Slices (Fellenius Method)
+Bishop’s Simplified Method
+Both methods are based on the concept of dividing the slope into smaller sections (slices) and analyzing the forces acting on each slice. These methods differ in how they handle inter-slice forces and assumptions, which affects the accuracy of the results.
+
+5.2 Ordinary Method of Slices (Fellenius Method)
+5.2.1 Theory
+The Ordinary Method of Slices, also known as the Fellenius Method, is one of the simplest techniques used for slope stability analysis. In this method, the slope is assumed to fail along a circular slip surface. The soil mass above this surface is divided into a number of vertical slices.
+Each slice is analyzed individually, considering the forces acting on it. The method assumes that inter-slice forces (forces between adjacent slices) are negligible, which simplifies the calculations but slightly reduces accuracy.
+The stability of the slope is determined by comparing the total resisting forces (due to shear strength) with the total driving forces (due to the weight of the slices).
+
+5.2.2 Formula
+
+FoS=∑(c′⋅L+(Wcosθ−uL)tanϕ′)/∑(Wsinθ)​ 
+5.2.3 Explanation of Terms
+FoS (Factor of Safety):
+ Represents the stability of the slope. If FoS is greater than 1, the slope is stable; if less than 1, failure is likely.
+c′ (Effective Cohesion):
+ The cohesive strength of the soil. It represents the bonding force between soil particles and is usually expressed in kPa.
+L (Length of the Slice Base):
+ The length of the bottom surface of each slice along the slip surface.
+W (Weight of the Slice):
+ The total weight of the soil slice, calculated as:
+ W=γ×Area of sliceW = \gamma \times \text{Area of slice}W=γ×Area of slice
+ where γ\gammaγ is the unit weight of soil.
+
+
+θ (Theta):
+ The angle between the base of the slice and the horizontal plane.
+u (Pore Water Pressure):
+ The pressure exerted by water within the soil pores. It reduces the effective stress and hence decreases shear strength.
+φ′ (Angle of Internal Friction):
+ Represents the frictional resistance between soil particles.
+W sinθ (Driving Force Component):
+ This is the component of the slice weight acting parallel to the slip surface, causing movement.
+W cosθ (Normal Force Component):
+ This is the component of the slice weight acting perpendicular to the slip surface.
+
+5.2.4 Interpretation
+In this method:
+The numerator represents resisting forces
+The denominator represents driving forces
+Since inter-slice forces are ignored, the method is simple but may underestimate or overestimate stability in certain cases.
+
+5.3 Bishop’s Simplified Method
+5.3.1 Theory
+Bishop’s Simplified Method is an improved version of the Ordinary Method of Slices. It also assumes a circular failure surface and divides the slope into vertical slices. However, unlike the Fellenius method, it considers the effect of inter-slice normal forces, which increases accuracy.
+This method satisfies:
+Moment equilibrium
+Vertical force equilibrium
+However, it neglects shear forces between slices, which simplifies the calculations while maintaining reasonable accuracy.
+Since the Factor of Safety appears on both sides of the equation, the solution requires an iterative approach.
+
+5.3.2 Formula
+FoS=∑[1+FoStanθtanϕ′​c′L+(W−uL)tanϕ′​]​/∑(Wsinθ) 
+5.3.3 Explanation of Terms
+FoS (Factor of Safety):
+ The stability factor to be determined. Since it appears on both sides, it is calculated iteratively.
+c′ (Effective Cohesion):
+ Same as in Fellenius method; contributes to shear strength.
+L (Length of Slice Base):
+ Length of the base of each slice along the slip surface.
+W (Weight of Slice):
+ Weight of each slice due to soil mass.
+u (Pore Water Pressure):
+ Reduces effective normal stress and weakens the soil.
+φ′ (Angle of Internal Friction):
+ Represents frictional resistance between soil particles.
+θ (Angle of Slice Base):
+ Inclination of the base of each slice.
+tanθ tanφ′ / FoS Term:
+ This term accounts for the effect of inter-slice normal forces and introduces dependency on FoS, making the equation iterative.
+
+5.3.4 Iterative Procedure
+Since FoS appears on both sides of the equation, the calculation follows these steps:
+Assume an initial value of FoS (e.g., 1.0)
+Substitute into the equation
+Compute a new FoS value
+Repeat until the value converges (difference becomes very small)
+
+5.3.5 Interpretation
+Provides more accurate results than Fellenius method
+Accounts for inter-slice forces partially
+Widely used in practical engineering applications
+
+5.4 Comparison of Methods
+The Fellenius Method is simple and easy to implement but ignores inter-slice forces, which may reduce accuracy. On the other hand, Bishop’s Simplified Method provides more accurate results by considering inter-slice normal forces, although it requires iterative calculations.
+In this project, both methods are useful:
+Fellenius method for basic understanding and quick estimation
+Bishop’s method for more accurate and reliable results
+
+5.5 Implementation in the Project
+In the developed system, the user inputs soil parameters such as cohesion, angle of internal friction, unit weight, and slope geometry. The backend processes these inputs and applies the selected method to calculate the Factor of Safety.
+For the Fellenius method, direct computation is performed using the formula. For Bishop’s method, an iterative algorithm is used until convergence is achieved.
+The final result is displayed to the user along with an interpretation of slope stability, helping in decision-making.
+
+5.6 How the Tool Works
+The tool operates in a structured manner, starting with user input. The user provides necessary parameters such as soil properties and slope dimensions. These inputs are then processed by the backend system.
+The backend applies mathematical formulas and algorithms to calculate the Factor of Safety. Once the calculation is complete, the result is displayed to the user in an understandable format.
+
+5.7 Step-by-Step Process
+The process begins when the user opens the application and enters the required data. The system then checks whether the input values are valid. After validation, the backend performs the necessary calculations using predefined formulas.
+Once the Factor of Safety is computed, the system interprets the result and determines whether the slope is stable, critical, or unsafe. Along with 2D and 3D visualisation of slope failure geometry it also gives critical failure surface diagrams. If the given slope is 45 degree and if it gives FOS < 1.5 it says slope is unstable. To make it stable we can add nails in soil by increasing its FOS value. It also suggests the number of nails needed and what should be the gap between each nail to increase FOS value along with a display of calculated FOS value after the addition of nails in soil . Finally, the result is displayed on the user interface, allowing the user to make informed decisions.
+
+
+
+
