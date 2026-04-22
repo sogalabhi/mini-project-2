@@ -550,7 +550,7 @@ The following **six** figures are intended to support Chapter 6 in the final PDF
 | **3** | 2D — left **Image** (server-generated diagram) | After run, when the tab is enabled. Omit only if the build never returns an image. |
 | **4** | 3D — left **Comparison** tab (multi-method FS table) | After **Run Multi-Method** completes: comparison mode on, methods selected as in §6.2.2, inputs matching the §6.2 case study. |
 | **5** | 3D — left **Preview** (meshed terrain, slip mesh, optional prisms / heatmap / scene controls) | **After** the same successful multi-method run as Fig. 4 (same inputs); open **Preview**, ensure **include render geometry** was on for the run, then enable **terrain mesh**, **slip mesh**, and any column/prism/heatmap layers you want visible. |
-| **6** | 2D — right tab **Results** (soil-nail **design** inputs: target FOS, steel, bond) | Matches §6.1.3 settings; shows reinforcement panel, not the left output tab. |
+| **6** | 2D — **Soil nails added** (design output with **nail spacings**) | After **Run Analysis** with reinforcement enabled for §6.1.3. Capture **left Results** where the tool reports **horizontal and vertical nail spacing**, grid (rows/columns), diameter, and length; you may include the **right-hand Results** tab in the same figure to show target FOS / steel / bond inputs used for that layout. |
 
 **Note for Figure 4:** The **Comparison** tab is populated only after **Run Multi-Method** with **comparison** mode enabled and several methods ticked (as for §6.2.2). A single-method **Run 3D Analysis** leaves nothing meaningful to show there.
 
@@ -588,7 +588,7 @@ The following **six** figures are intended to support Chapter 6 in the final PDF
 
 **[Insert image here — Figure 6]**
 
-**Figure 6.** Two-dimensional web client: right-hand tab labeled **Results** (reinforcement **design** inputs only) — **enable design**, **target FOS**, **steel yield**, and **soil–grout bond** aligned with §6.1.3 (distinct from the left **Results** output tab in Figure 2).
+**Figure 6.** Two-dimensional web client: **2D soil-nail treatment for §6.1.3** — emphasis on **recommended nail spacings** (**horizontal** and **vertical** intervals on the slope), together with the implied **nail grid** (rows and columns), **bar diameter**, and **length** as produced after **Run Analysis** when reinforcement design is enabled. The numeric **spacing** values are given in the **left Results** design message; the **right-hand tab labeled Results** holds the **target FOS**, **steel yield**, and **soil–grout bond** inputs used to derive that layout (distinct from Bishop/Fellenius output in Figure 2).
 
 ---
 
@@ -680,22 +680,45 @@ Hence reinforcement-driven FS improvement should be interpreted as model-relativ
 
 # CHAPTER 9: CONCLUSION (FULL CURRENT SYSTEM)
 
-The project now operates as a complete multi-method slope stability platform with:
+## 9.1 Context and scope
 
-- robust 2D analysis and Bishop/Fellenius comparison,
-- modular 3D LEM implementation with seven methods,
-- reinforcement effect modeling in both practical and 3D analytical workflows,
-- diagnostic visualization for geometric and scalar interpretation,
-- documented **representative case studies** (Chapter 6) tying inputs to numeric outputs.
+Slope stability assessment remains a central responsibility in geotechnical practice, yet the gap between **fast 2D screening** and **spatially explicit 3D reasoning** is often filled by expensive commercial tools or opaque “black box” workflows. Educational institutions and early-stage projects benefit from **transparent, multi-method** software that exposes assumptions, reports diagnostics, and supports comparison across established limit equilibrium formulations.
 
-Major outcomes:
+This work set out to implement and document such a system: an **integrated** environment spanning **classical 2D** Bishop and Fellenius analysis, a **seven-method 3D** limit equilibrium suite, **reinforcement-related extensions** at two fidelity levels (practical 2D nail guidance and a phase-2 simplified 3D nail term), and a **diagnostic visualization** path for interpreting geometry and scalar fields. The outcome is a coherent platform suitable for **learning, pre-design screening, and method-oriented research**, while honestly separating what is **fully rigorous** from what is **simplified or deferred** (Chapters 7–8).
 
-- reproducible method-comparison workflows,
-- clear diagnostic visibility for engineering interpretation,
-- extensible computational architecture for future geotechnical enhancements.
+## 9.2 Principal deliverables
 
-The system is suitable for educational, pre-design, and research-oriented analysis use,
-with transparent assumptions and clearly identified deferred physics.
+The implemented system provides:
+
+- **Two-dimensional analysis** using an external limit equilibrium engine for Bishop’s simplified method, coupled with an in-house **shared candidate-circle** workflow so Fellenius results are comparable **without** search-population bias. Layered soils, surface loads, and a phreatic line can be represented, and a **soil-nail design recommender** translates a target factor of safety into practical layout guidance when reinforcement is enabled.
+- **Three-dimensional analysis** through a rebuilt column-based pipeline: preprocessing from digital-style top surfaces and slip definitions, hydro and strength assignment, **directional search**, and dispatch to **seven** documented formulations (Hungr family, Cheng–Yip family, and a Spencer-like coupled branch). Results include global factors of safety, method diagnostics, and optional **render-oriented** geometry for interpretation in the client.
+- **Reinforcement in 3D** as an explicit **phase-2 resisting contribution** per column, with clear documentation that full nail–surface intersection mechanics are **not** claimed in the current phase.
+- **User-facing workflow** for defining models, running analyses, comparing methods, and inspecting **summary, comparison, diagnostic, payload, and three-dimensional preview** views, supported by validation and testing strategy described in Chapter 7.
+
+Together, these pieces form more than a collection of scripts: they form a **traceable** engineering workflow from model definition through numeric output to visual sanity checks.
+
+## 9.3 Methodological and engineering contributions
+
+Several aspects of the work go beyond “running formulas”:
+
+1. **Fair comparison in 2D** — Generating one candidate slip-circle population and evaluating **both** Bishop and Fellenius on it isolates **equation-related** differences from stochastic search effects, which is pedagogically and technically valuable.
+2. **Structured 3D method literacy** — Implementing seven methods side by side, with engineering context, limitations, and a **method-selection** narrative (Chapter 5), supports informed use rather than treating any single FS as absolute truth.
+3. **Transparency of simplifications** — Reinforcement (especially in 3D) and visualization proxies are labeled as **model-relative**; Chapter 8 records deferred physics so users and examiners can see **engineering maturity** rather than over-claiming.
+4. **Evidence of behaviour** — Chapter 6 ties **declared inputs** to **reproducible numbers** for a demanding 2D case and a 3D case study, and documents how figures in the report should be captured from the live tool.
+
+These contributions align with the broader aim of **open, inspectable** geotechnical computing in an undergraduate project context.
+
+## 9.4 Validation, limitations, and responsible use
+
+The project adopts a **layered quality strategy** (Chapter 7): schema validation, unit and integration tests, regression and failure-mode checks where applicable, and UI-level consistency for payloads and client validation. That said, **no substitute exists** for peer review, independent benchmarks, and site-specific calibration. Chapter 8 lists **intrinsic limits** of limit equilibrium (column rigid-block idealization, direction discretization, simplified nail geometry, visualization as an aid not a proof). The system should be used as **one line of evidence** among geology, monitoring, construction quality, and codes of practice—not as sole sign-off for high-consequence works without further verification.
+
+## 9.5 Outlook
+
+Natural extensions—already flagged in Chapter 8—include richer **3D reinforcement–slip interaction**, broader **failure-surface families**, stronger **material stratification** in 3D preprocessing, **uncertainty** treatment, and a growing **benchmark library** against published solutions and commercial codes. The modular structure of the computational core and the separation of **solver**, **preprocess**, and **presentation** layers are intended to make such extensions feasible without rewriting the entire system.
+
+## 9.6 Closing remarks
+
+In conclusion, the project delivers a **working, documented, multi-method slope stability platform** that bridges **2D and 3D limit equilibrium**, surfaces **reinforcement effects** at stated fidelity levels, and supports **interpretation** through diagnostics and three-dimensional views. The authors believe the combination of **reproducible case studies**, **clear limitation statements**, and **traceable methodology** satisfies the intent of a rigorous B.Tech mini-project while leaving a credible path for **future research and software evolution** in computational geotechnics.
 
 ---
 
