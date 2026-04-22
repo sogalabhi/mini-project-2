@@ -548,9 +548,11 @@ The following **six** figures are intended to support Chapter 6 in the final PDF
 | **1** | 2D — **Visualizer** (left) + **Geometry** tab (right) | Same inputs as §6.1 (or very close). Run not required; clean canvas. |
 | **2** | 2D — left **Results** (numeric FS, Bishop vs Fellenius) | After a successful **Run Analysis** for the §6.1 case. |
 | **3** | 2D — left **Image** (server-generated diagram) | After run, when the tab is enabled. Omit only if the build never returns an image. |
-| **4** | 3D — **Summary** (key FS and method for §6.2) | After **Run 3D Analysis** with settings matching §6.2. |
-| **5** | 3D — **Preview** (scene: terrain, slip, optional heatmap/controls) | Same run as Fig. 4; enable layers as needed for a clear “3D result” view. |
+| **4** | 3D — left **Comparison** tab (multi-method FS table) | Enable **comparison** mode on the right **Method** tab, select the methods in §6.2.2, then **Run Multi-Method** so the table matches the case study. |
+| **5** | 3D — **Preview** (scene: terrain, slip, optional heatmap/controls) | Same §6.2 model as Fig. 4 (same inputs); enable layers as needed for a clear “3D result” view. |
 | **6** | 2D — right tab **Results** (soil-nail **design** inputs: target FOS, steel, bond) | Matches §6.1.3 settings; shows reinforcement panel, not the left output tab. |
+
+**Note for Figure 4:** The **Comparison** tab is populated only after **Run Multi-Method** with **comparison** mode enabled and several methods ticked (as for §6.2.2). A single-method **Run 3D Analysis** leaves nothing meaningful to show there—use the checklist above for this figure.
 
 ---
 
@@ -574,13 +576,13 @@ The following **six** figures are intended to support Chapter 6 in the final PDF
 
 **[Insert image here — Figure 4]**
 
-**Figure 4.** Three-dimensional web client: **Summary** (or equivalent primary output) after **Run 3D Analysis** for the §6.2 configuration — global FS, method identity, and status consistent with the tables in §6.2.2–6.2.3.
+**Figure 4.** Three-dimensional web client: left **Comparison** tab after **Run Multi-Method** — factor of safety **by method** for the §6.2 configuration (aligns with the unreinforced seven-method table in §6.2.2; more informative than a single-line Summary for this chapter).
 
 ---
 
 **[Insert image here — Figure 5]**
 
-**Figure 5.** Three-dimensional web client: **Preview** — interactive scene showing **terrain mesh** (or points), **slip surface**, and optional **per-column scalar / heatmap** and scene controls, for the same §6.2 case as Figure 4.
+**Figure 5.** Three-dimensional web client: **Preview** — interactive scene showing **terrain mesh** (or points), **slip surface**, and optional **per-column scalar / heatmap** and scene controls, for the **same §6.2 inputs** as Figure 4.
 
 ---
 
@@ -740,7 +742,7 @@ The production web client provides two full-page modes: **2D** (`/`) and **3D** 
 - **Do** include at least **one** clear screenshot per mode showing the overall layout. A practical default:
   - **2D:** left dock on **Visualizer**, right dock on the first input tab, **Geometry**, so the figure shows both the 2D canvas and slope dimensions (see **Figure C-1** placeholder below).
   - **3D:** one screenshot with a representative combination (for example **Preview** on the left and **Method** or **Surfaces** on the right) — **Figure C-2** placeholder.
-- Optional extra figures: **2D** — left **Image** (generated diagram) or left **Results** (numeric table); **3D** — **Summary** or **Diagnostics** if you need to show output-heavy views in the appendix.
+- Optional extra figures: **2D** — left **Image** (generated diagram) or left **Results** (numeric table); **3D** — **Summary** (single-method headline), **Comparison** (if not already Figure 4 in §6.3), or **Diagnostics** if you need additional appendix-only views.
 
 ---
 
